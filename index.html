@@ -9,7 +9,6 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="VTT Gear">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" href="icon-192.png">
 
@@ -59,17 +58,17 @@
       <div>
         <div class="flex items-center gap-2">
           <h1 class="text-sm md:text-base font-bold tracking-tight text-white">VTT Weather & Gear</h1>
-          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">v3.4-AI</span>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">v3.4-FIX</span>
         </div>
         <p class="text-[11px] text-gray-300 font-medium" id="current-target-date">Calcul météo samedi...</p>
       </div>
     </div>
     <div class="flex items-center gap-2">
-      <button onclick="window.detectUserLocation()" id="btn-gps" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs font-semibold border border-gray-700 transition shadow-sm">
+      <button id="btn-gps" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs font-semibold border border-gray-700 transition shadow-sm">
         <i data-lucide="map-pin" class="w-3.5 h-3.5 text-emerald-400"></i>
         <span id="gps-label">Localiser</span>
       </button>
-      <button onclick="window.toggleTab('gear')" id="btn-tab-gear" class="p-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition">
+      <button id="btn-tab-gear" class="p-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition">
         <i data-lucide="shield" class="w-4 h-4"></i>
       </button>
     </div>
@@ -80,7 +79,6 @@
 
     <!-- View: Weather & Advice -->
     <section id="view-dashboard" class="space-y-4">
-      
       <div class="p-5 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-900/90 border border-gray-800 shadow-xl relative overflow-hidden">
         <div class="absolute -right-8 -bottom-8 w-36 h-36 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
 
@@ -115,40 +113,32 @@
           </div>
         </div>
 
-        <!-- Detailed Hourly Breakdown 13h45 - 19h -->
         <div class="mt-4 pt-3.5 border-t border-gray-800">
           <div class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2 flex items-center gap-1.5">
             <i data-lucide="clock" class="w-3.5 h-3.5 text-emerald-400"></i>
             Évolution heure par heure (14h - 19h)
           </div>
-          <div id="hourly-forecast-row" class="grid grid-cols-6 gap-1.5 text-center overflow-x-auto pb-1 custom-scroll">
-            <div class="p-2 rounded-lg bg-gray-800/50 text-[11px] text-gray-400">14h<br>--</div>
-            <div class="p-2 rounded-lg bg-gray-800/50 text-[11px] text-gray-400">15h<br>--</div>
-            <div class="p-2 rounded-lg bg-gray-800/50 text-[11px] text-gray-400">16h<br>--</div>
-            <div class="p-2 rounded-lg bg-gray-800/50 text-[11px] text-gray-400">17h<br>--</div>
-            <div class="p-2 rounded-lg bg-gray-800/50 text-[11px] text-gray-400">18h<br>--</div>
-            <div class="p-2 rounded-lg bg-gray-800/50 text-[11px] text-gray-400">19h<br>--</div>
-          </div>
+          <div id="hourly-forecast-row" class="grid grid-cols-6 gap-1.5 text-center overflow-x-auto pb-1 custom-scroll"></div>
         </div>
 
         <div class="mt-4 pt-3.5 border-t border-gray-800 flex items-center justify-between text-xs text-gray-300">
           <span class="flex items-center gap-1.5 font-medium">
             <i data-lucide="sliders" class="w-4 h-4 text-emerald-400"></i> Mode Simulateur
           </span>
-          <button onclick="window.toggleSimulator()" class="text-emerald-400 font-semibold hover:underline">Ajuster T° / Humidité</button>
+          <button id="btn-toggle-sim" class="text-emerald-400 font-semibold hover:underline">Ajuster T° / Humidité</button>
         </div>
 
         <div id="sim-panel" class="hidden mt-3.5 pt-3.5 border-t border-gray-800/80 space-y-3">
           <div class="grid grid-cols-2 gap-3.5">
             <div>
               <label class="text-xs text-gray-300 font-medium block mb-1">Température : <span id="sim-temp-val" class="text-white font-bold text-sm">5°C</span></label>
-              <input type="range" min="-5" max="15" value="5" step="1" id="sim-temp" oninput="window.runSimulation()" class="w-full h-2 bg-gray-700 rounded-lg accent-emerald-500 cursor-pointer">
+              <input type="range" min="-5" max="15" value="5" step="1" id="sim-temp" class="w-full h-2 bg-gray-700 rounded-lg accent-emerald-500 cursor-pointer">
             </div>
             <div>
-              <label class="text-xs text-gray-300 font-medium block mb-1">État du terrain / Sol</label>
-              <select id="sim-condition" onchange="window.runSimulation()" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-2.5 py-1.5 text-xs text-white">
+              <label class="text-xs text-gray-300 font-medium block mb-1">État du terrain</label>
+              <select id="sim-condition" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-2.5 py-1.5 text-xs text-white">
                 <option value="dry">Sec / Gelé</option>
-                <option value="wet" selected>Pluie / Terrain Détrempé</option>
+                <option value="wet" selected>Pluie / Détrempé</option>
               </select>
             </div>
           </div>
@@ -162,7 +152,6 @@
         </h2>
         <div class="grid gap-3" id="recommendation-cards"></div>
       </div>
-
     </section>
 
     <!-- View: Gear Locker / Inventaire -->
@@ -172,38 +161,364 @@
           <h2 class="text-base font-bold text-white tracking-tight">Garage & Fiches Matériel</h2>
           <p class="text-xs text-gray-400">Détails, critères de décision et modification</p>
         </div>
-        <button onclick="window.openNewGearModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold shadow transition flex items-center gap-1.5">
+        <button id="btn-add-gear" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold shadow transition flex items-center gap-1.5">
           <i data-lucide="plus" class="w-4 h-4"></i> Ajouter
         </button>
       </div>
 
-      <!-- Category Filter Pills -->
       <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 text-xs" id="category-filter-bar"></div>
 
-      <!-- Search Input Bar -->
       <div class="relative">
         <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
-        <input type="text" id="gear-search-input" oninput="window.handleSearchFilter(this.value)" placeholder="Rechercher un équipement..." 
+        <input type="text" id="gear-search-input" placeholder="Rechercher un équipement..." 
                class="w-full bg-gray-900/90 border border-gray-800 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition">
       </div>
 
-      <!-- Gear list -->
       <div id="gear-list" class="space-y-3"></div>
     </section>
 
   </main>
 
-  <!-- Add / Edit Gear Modal -->
+  <!-- Add / Edit Modal -->
   <div id="gear-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 overflow-y-auto">
     <div class="bg-gray-900 border border-gray-800 rounded-2xl max-w-lg w-full p-5 space-y-4 shadow-2xl my-6 max-h-[90vh] overflow-y-auto custom-scroll">
       
       <div class="flex items-center justify-between pb-3 border-b border-gray-800">
         <h3 id="modal-title" class="text-sm font-bold text-white flex items-center gap-2">
-          <i data-lucide="tag" class="w-4 h-4 text-emerald-400"></i> Modifier la fiche équipement
+          <i data-lucide="tag" class="w-4 h-4 text-emerald-400"></i> Fiche équipement
         </h3>
-        <button onclick="window.toggleAddGearModal()" class="text-gray-400 hover:text-white p-1">
+        <button id="modal-btn-close-x" class="text-gray-400 hover:text-white p-1">
           <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
 
-      <div class="p-3.5 rounded-xl bg-gradient-to-r from-emerald-950/40 to-slate-900 border border-emerald-50
+      <input type="hidden" id="modal-edit-id" value="">
+
+      <div class="space-y-3 text-xs">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-gray-300 font-semibold mb-1">Catégorie</label>
+            <select id="modal-category" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-white">
+              <option value="buste">Buste</option>
+              <option value="jambes">Jambes</option>
+              <option value="pieds">Pieds</option>
+              <option value="mains">Mains</option>
+              <option value="cou">Cou & Tête</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-gray-300 font-semibold mb-1">Condition météo</label>
+            <select id="modal-condition" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-white">
+              <option value="all">Toutes conditions</option>
+              <option value="wet">Pluie / Boue</option>
+              <option value="dry">Sec / Coupe-vent</option>
+              <option value="cold">Grand froid</option>
+              <option value="mild">Mi-saison</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-gray-300 font-semibold mb-1">Nom du modèle</label>
+          <input type="text" id="modal-name" placeholder="ex: Veste Endura MT500 ADV" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-white">
+        </div>
+
+        <div>
+          <label class="block text-gray-300 font-semibold mb-1">Spécifications techniques</label>
+          <input type="text" id="modal-specs" placeholder="Membrane, tissu..." class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-white">
+        </div>
+
+        <div>
+          <label class="block text-gray-300 font-semibold mb-1">Image (URL)</label>
+          <input type="url" id="modal-image" placeholder="https://..." class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-white">
+        </div>
+
+        <div class="p-3 bg-gray-800/60 rounded-xl border border-gray-700 space-y-2">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-gray-400 text-[11px] mb-1">T° Min (°C)</label>
+              <input type="number" id="modal-temp-min" value="-5" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-2.5 py-1.5 text-white">
+            </div>
+            <div>
+              <label class="block text-gray-400 text-[11px] mb-1">T° Max (°C)</label>
+              <input type="number" id="modal-temp-max" value="10" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-2.5 py-1.5 text-white">
+            </div>
+          </div>
+          <div>
+            <label class="block text-gray-400 text-[11px] mb-1">Règle de décision</label>
+            <textarea id="modal-decision" rows="2" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white text-xs"></textarea>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-gray-300 font-semibold mb-1">Lien fiche produit</label>
+          <input type="url" id="modal-link" placeholder="https://..." class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-white">
+        </div>
+      </div>
+
+      <div class="flex gap-2.5 pt-2">
+        <button id="modal-btn-cancel" class="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium rounded-xl text-xs transition">Annuler</button>
+        <button id="modal-btn-save" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-xs transition">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="fixed bottom-0 inset-x-0 bg-gray-900/95 backdrop-blur-md border-t border-gray-800 py-2.5 px-6 flex justify-around text-xs">
+    <button id="nav-btn-dashboard" class="flex flex-col items-center gap-1 text-emerald-400 font-semibold">
+      <i data-lucide="cloud-sun" class="w-5 h-5"></i>
+      <span>Météo & Tenue</span>
+    </button>
+    <button id="nav-btn-gear" class="flex flex-col items-center gap-1 text-gray-400 hover:text-white font-medium">
+      <i data-lucide="shield" class="w-5 h-5"></i>
+      <span>Mon Matériel</span>
+    </button>
+    <div class="absolute right-3 bottom-1 text-[9px] text-gray-500 font-mono select-none">
+      v3.4-FIX
+    </div>
+  </nav>
+
+  <!-- Script modulaire sans fonctions inline -->
+  <script>
+    (function() {
+      // Nettoyage forcé de tout Service Worker résiduel
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(regs => {
+          for (let r of regs) r.unregister();
+        });
+      }
+      if ('caches' in window) {
+        caches.keys().then(keys => {
+          for (let k of keys) caches.delete(k);
+        });
+      }
+
+      const CATEGORY_IMAGES = {
+        buste: "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=240&q=80",
+        jambes: "https://images.unsplash.com/photo-1552902865-b72c031ac5ea?auto=format&fit=crop&w=240&q=80",
+        pieds: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=240&q=80",
+        mains: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=240&q=80",
+        cou: "https://images.unsplash.com/photo-1520903920243-00d872a2d1c9?auto=format&fit=crop&w=240&q=80"
+      };
+
+      const DEFAULT_GEAR = [
+        { id: '1', category: 'buste', name: 'Endura MT500 ADV (Vert Flashy)', specs: 'Pertex Shield 3L 20k/20k', condition: 'wet', tempMin: -5, tempMax: 12, decisionRule: 'Activer par sol détrempé. Synthétique si > 8°C.', image: CATEGORY_IMAGES.buste, link: '' },
+        { id: '2', category: 'buste', name: 'Veste Gore Power Active Bleue', specs: 'Windstopper respirant', condition: 'dry', tempMin: -5, tempMax: 10, decisionRule: 'Temps sec ou froid vif.', image: CATEGORY_IMAGES.buste, link: '' },
+        { id: '3', category: 'buste', name: 'Sous-couche Icebreaker 200', specs: 'Mérinos 200g thermorégulant', condition: 'cold', tempMin: -5, tempMax: 7, decisionRule: 'Chaleur constante.', image: CATEGORY_IMAGES.buste, link: '' },
+        { id: '4', category: 'jambes', name: 'Pantalon Endura MT500 II', specs: 'ExoShell40DR étanche', condition: 'wet', tempMin: -5, tempMax: 12, decisionRule: 'Verrouiller par-dessus manchon.', image: CATEGORY_IMAGES.jambes, link: '' },
+        { id: '5', category: 'pieds', name: 'Northwave Kingrock GTX', specs: 'Gore-Tex Koala + Vibram', condition: 'all', tempMin: -5, tempMax: 12, decisionRule: 'Goulotte étanche obligatoire.', image: CATEGORY_IMAGES.pieds, link: '' }
+      ];
+
+      let gearList = DEFAULT_GEAR;
+      try {
+        const stored = localStorage.getItem('vtt_gear_list');
+        if (stored) gearList = JSON.parse(stored);
+      } catch (e) {
+        gearList = DEFAULT_GEAR;
+      }
+
+      let activeCat = 'all';
+      let activeQuery = '';
+      let currentCoords = { lat: 48.7778, lon: 2.0514, name: "Vallée de Chevreuse" };
+
+      function getNextSaturday() {
+        const now = new Date();
+        const diff = (6 - now.getDay() + 7) % 7;
+        const sat = new Date(now);
+        sat.setDate(now.getDate() + (diff === 0 ? 0 : diff));
+        return sat;
+      }
+
+      function switchTab(target) {
+        const dash = document.getElementById('view-dashboard');
+        const gear = document.getElementById('view-gear');
+        const btnDash = document.getElementById('nav-btn-dashboard');
+        const btnGear = document.getElementById('nav-btn-gear');
+
+        if (target === 'dashboard') {
+          dash.classList.remove('hidden');
+          gear.classList.add('hidden');
+          btnDash.className = "flex flex-col items-center gap-1 text-emerald-400 font-semibold";
+          btnGear.className = "flex flex-col items-center gap-1 text-gray-400 hover:text-white font-medium";
+        } else {
+          dash.classList.add('hidden');
+          gear.classList.remove('hidden');
+          btnDash.className = "flex flex-col items-center gap-1 text-gray-400 hover:text-white font-medium";
+          btnGear.className = "flex flex-col items-center gap-1 text-emerald-400 font-semibold";
+          renderFilterBar();
+          renderGear();
+        }
+      }
+
+      function renderFilterBar() {
+        const bar = document.getElementById('category-filter-bar');
+        if (!bar) return;
+
+        const counts = {
+          all: gearList.length,
+          buste: gearList.filter(g => g.category === 'buste').length,
+          jambes: gearList.filter(g => g.category === 'jambes').length,
+          pieds: gearList.filter(g => g.category === 'pieds').length,
+          mains: gearList.filter(g => g.category === 'mains').length,
+          cou: gearList.filter(g => g.category === 'cou').length
+        };
+
+        const cats = [
+          { id: 'all', label: 'Tout' },
+          { id: 'buste', label: 'Buste' },
+          { id: 'jambes', label: 'Jambes' },
+          { id: 'pieds', label: 'Pieds' },
+          { id: 'mains', label: 'Mains' },
+          { id: 'cou', label: 'Cou & Tête' }
+        ];
+
+        bar.innerHTML = '';
+        cats.forEach(c => {
+          const btn = document.createElement('button');
+          const isAct = activeCat === c.id;
+          btn.className = `flex items-center gap-1.5 px-3 py-1.5 rounded-xl border shrink-0 transition ${isAct ? 'bg-emerald-600 text-white font-bold border-emerald-500' : 'bg-gray-800 text-gray-300 border-gray-700'}`;
+          btn.innerHTML = `<span>${c.label}</span><span class="text-[11px] px-1.5 py-0.2 rounded-full ${isAct ? 'bg-emerald-800' : 'bg-gray-900'}">${counts[c.id] || 0}</span>`;
+          btn.addEventListener('click', () => {
+            activeCat = c.id;
+            renderFilterBar();
+            renderGear();
+          });
+          bar.appendChild(btn);
+        });
+      }
+
+      function renderGear() {
+        const list = document.getElementById('gear-list');
+        if (!list) return;
+        list.innerHTML = '';
+
+        const items = gearList.filter(g => {
+          const mCat = activeCat === 'all' || g.category === activeCat;
+          const mQ = !activeQuery || g.name.toLowerCase().includes(activeQuery) || (g.specs && g.specs.toLowerCase().includes(activeQuery));
+          return mCat && mQ;
+        });
+
+        if (items.length === 0) {
+          list.innerHTML = '<div class="p-6 text-center text-gray-400 text-sm">Aucun équipement correspondant.</div>';
+          return;
+        }
+
+        items.forEach(item => {
+          const card = document.createElement('div');
+          card.className = 'p-4 rounded-2xl bg-[#0e1626] border border-gray-800 space-y-3';
+          card.innerHTML = `
+            <div class="flex items-start gap-3.5">
+              <div class="w-16 h-16 shrink-0 rounded-2xl overflow-hidden bg-gray-950 border border-gray-800">
+                <img src="${item.image || CATEGORY_IMAGES[item.category]}" class="w-full h-full object-cover">
+              </div>
+              <div class="flex-1 min-w-0">
+                <h3 class="text-sm font-bold text-white truncate">${item.name}</h3>
+                <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-gray-800 text-emerald-400 border border-gray-700">${item.category}</span>
+                <p class="text-xs text-gray-300 mt-1 line-clamp-2">${item.specs || ''}</p>
+              </div>
+            </div>
+            <div class="p-2.5 rounded-xl bg-gray-900 text-xs text-gray-300">
+              <span class="text-emerald-400 font-semibold">${item.tempMin}°C à ${item.tempMax}°C</span> - ${item.decisionRule || ''}
+            </div>
+          `;
+          list.appendChild(card);
+        });
+      }
+
+      async function fetchWeather(lat, lon) {
+        const sat = getNextSaturday();
+        const iso = sat.toISOString().split('T')[0];
+        try {
+          const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,apparent_temperature,precipitation,wind_speed_10m&timezone=auto&start_date=${iso}&end_date=${iso}`);
+          const data = await res.json();
+          if (data.hourly) {
+            const h = [14, 15, 16, 17, 18, 19];
+            const temps = h.map(i => data.hourly.temperature_2m[i] ?? 0);
+            const rains = h.map(i => data.hourly.precipitation[i] ?? 0);
+            const avgT = Math.round(temps.reduce((a, b) => a + b, 0) / temps.length);
+            const totR = Math.round(rains.reduce((a, b) => a + b, 0) * 10) / 10;
+
+            document.getElementById('temp-display').textContent = `${avgT}°C`;
+            document.getElementById('feels-display').textContent = `Ressenti ${Math.round(data.hourly.apparent_temperature[15])}°C`;
+            document.getElementById('rain-display').innerHTML = `<span>${totR} mm total</span>`;
+            document.getElementById('desc-display').textContent = totR > 0.5 ? "Pluie / Humide" : "Frais / Sec";
+
+            const row = document.getElementById('hourly-forecast-row');
+            row.innerHTML = '';
+            h.forEach((hour, idx) => {
+              const cell = document.createElement('div');
+              cell.className = 'p-2 rounded-xl border border-gray-800 bg-gray-900/60 text-xs flex flex-col items-center';
+              cell.innerHTML = `<span class="text-[10px] text-gray-400">${hour}h</span><span class="font-bold text-white">${Math.round(temps[idx])}°</span>`;
+              row.appendChild(cell);
+            });
+
+            applyRules(avgT, totR > 0.2);
+          }
+        } catch (e) {
+          document.getElementById('temp-display').textContent = '6°C';
+          applyRules(6, true);
+        }
+      }
+
+      function applyRules(temp, isWet) {
+        const c = document.getElementById('recommendation-cards');
+        c.innerHTML = '';
+        const vest = isWet 
+          ? (temp >= 8 ? 'Veste Endura MT500 ADV (Synthétique conseillé)' : 'Veste Endura MT500 ADV + Mérinos')
+          : 'Veste Gore Windstopper';
+        const pant = isWet ? 'Pantalon Endura MT500 Waterproof II' : 'Salopette Gore Thermique';
+
+        [
+          { t: 'Buste', val: vest },
+          { t: 'Jambes', val: pant },
+          { t: 'Pieds', val: 'Northwave Kingrock GTX (Manchon sous le pantalon)' }
+        ].forEach(item => {
+          const el = document.createElement('div');
+          el.className = 'p-3 rounded-xl bg-gray-900 border border-gray-800 text-xs';
+          el.innerHTML = `<div class="font-bold text-emerald-400 uppercase text-[10px]">${item.t}</div><div class="text-white mt-0.5">${item.val}</div>`;
+          c.appendChild(el);
+        });
+      }
+
+      // Liaison des événements au DOM
+      window.addEventListener('DOMContentLoaded', () => {
+        if (window.lucide) lucide.createIcons();
+
+        const sat = getNextSaturday();
+        document.getElementById('current-target-date').textContent = `Fenêtre : Samedi ${sat.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}`;
+
+        document.getElementById('btn-tab-gear').addEventListener('click', () => switchTab('gear'));
+        document.getElementById('nav-btn-gear').addEventListener('click', () => switchTab('gear'));
+        document.getElementById('nav-btn-dashboard').addEventListener('click', () => switchTab('dashboard'));
+
+        document.getElementById('btn-gps').addEventListener('click', () => {
+          if (!navigator.geolocation) return;
+          navigator.geolocation.getCurrentPosition(pos => {
+            currentCoords.lat = pos.coords.latitude;
+            currentCoords.lon = pos.coords.longitude;
+            document.getElementById('gps-label').textContent = "Localisé";
+            fetchWeather(currentCoords.lat, currentCoords.lon);
+          });
+        });
+
+        const sInput = document.getElementById('gear-search-input');
+        if (sInput) {
+          sInput.addEventListener('input', (e) => {
+            activeQuery = e.target.value.toLowerCase().trim();
+            renderGear();
+          });
+        }
+
+        const simToggle = document.getElementById('btn-toggle-sim');
+        if (simToggle) {
+          simToggle.addEventListener('click', () => {
+            document.getElementById('sim-panel').classList.toggle('hidden');
+          });
+        }
+
+        fetchWeather(currentCoords.lat, currentCoords.lon);
+      });
+    })();
+  </script>
+</body>
+</html>
