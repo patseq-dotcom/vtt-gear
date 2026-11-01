@@ -5,15 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VTT Weather & Gear Assistant</title>
   
-  <!-- PWA Meta -->
   <meta name="theme-color" content="#10b981">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="VTT Gear">
   <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="icon" type="image/png" href="icon-192.png">
 
-  <!-- Tailwind CSS & Lucide Icons -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script>
@@ -38,7 +37,7 @@
           }
         }
       }
-    }
+    };
   </script>
   <style>
     body { background-color: #090d16; color: #f3f4f6; }
@@ -66,11 +65,11 @@
       </div>
     </div>
     <div class="flex items-center gap-2">
-      <button onclick="detectUserLocation()" id="btn-gps" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs font-semibold border border-gray-700 transition shadow-sm">
+      <button onclick="window.detectUserLocation()" id="btn-gps" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs font-semibold border border-gray-700 transition shadow-sm">
         <i data-lucide="map-pin" class="w-3.5 h-3.5 text-emerald-400"></i>
         <span id="gps-label">Localiser</span>
       </button>
-      <button onclick="toggleTab('gear')" id="btn-tab-gear" class="p-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition">
+      <button onclick="window.toggleTab('gear')" id="btn-tab-gear" class="p-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition">
         <i data-lucide="shield" class="w-4 h-4"></i>
       </button>
     </div>
@@ -82,11 +81,9 @@
     <!-- View: Weather & Advice -->
     <section id="view-dashboard" class="space-y-4">
       
-      <!-- Weather Summary Card -->
       <div class="p-5 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-900/90 border border-gray-800 shadow-xl relative overflow-hidden">
         <div class="absolute -right-8 -bottom-8 w-36 h-36 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
 
-        <!-- Spot & Title banner -->
         <div class="mb-3 pb-3 border-b border-gray-800/80 flex flex-wrap items-center justify-between gap-2">
           <div class="flex items-center gap-2 text-xs font-bold text-emerald-400 uppercase tracking-wider">
             <i data-lucide="calendar" class="w-4 h-4"></i>
@@ -99,7 +96,6 @@
           </div>
         </div>
 
-        <!-- Global Averages Window -->
         <div class="flex items-start justify-between">
           <div>
             <div class="flex items-baseline gap-2.5">
@@ -135,24 +131,22 @@
           </div>
         </div>
 
-        <!-- Simulation override panel toggle -->
         <div class="mt-4 pt-3.5 border-t border-gray-800 flex items-center justify-between text-xs text-gray-300">
           <span class="flex items-center gap-1.5 font-medium">
             <i data-lucide="sliders" class="w-4 h-4 text-emerald-400"></i> Mode Simulateur
           </span>
-          <button onclick="toggleSimulator()" class="text-emerald-400 font-semibold hover:underline">Ajuster T° / Humidité</button>
+          <button onclick="window.toggleSimulator()" class="text-emerald-400 font-semibold hover:underline">Ajuster T° / Humidité</button>
         </div>
 
-        <!-- Simulator Form -->
         <div id="sim-panel" class="hidden mt-3.5 pt-3.5 border-t border-gray-800/80 space-y-3">
           <div class="grid grid-cols-2 gap-3.5">
             <div>
               <label class="text-xs text-gray-300 font-medium block mb-1">Température : <span id="sim-temp-val" class="text-white font-bold text-sm">5°C</span></label>
-              <input type="range" min="-5" max="15" value="5" step="1" id="sim-temp" oninput="runSimulation()" class="w-full h-2 bg-gray-700 rounded-lg accent-emerald-500 cursor-pointer">
+              <input type="range" min="-5" max="15" value="5" step="1" id="sim-temp" oninput="window.runSimulation()" class="w-full h-2 bg-gray-700 rounded-lg accent-emerald-500 cursor-pointer">
             </div>
             <div>
               <label class="text-xs text-gray-300 font-medium block mb-1">État du terrain / Sol</label>
-              <select id="sim-condition" onchange="runSimulation()" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-2.5 py-1.5 text-xs text-white">
+              <select id="sim-condition" onchange="window.runSimulation()" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-2.5 py-1.5 text-xs text-white">
                 <option value="dry">Sec / Gelé</option>
                 <option value="wet" selected>Pluie / Terrain Détrempé</option>
               </select>
@@ -161,7 +155,6 @@
         </div>
       </div>
 
-      <!-- Tactical Equipment Recommendation -->
       <div class="space-y-3.5">
         <h2 class="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-2 px-1">
           <i data-lucide="sparkles" class="w-4 h-4 text-emerald-400"></i>
@@ -179,7 +172,7 @@
           <h2 class="text-base font-bold text-white tracking-tight">Garage & Fiches Matériel</h2>
           <p class="text-xs text-gray-400">Détails, critères de décision et modification</p>
         </div>
-        <button onclick="openNewGearModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold shadow transition flex items-center gap-1.5">
+        <button onclick="window.openNewGearModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold shadow transition flex items-center gap-1.5">
           <i data-lucide="plus" class="w-4 h-4"></i> Ajouter
         </button>
       </div>
@@ -190,7 +183,7 @@
       <!-- Search Input Bar -->
       <div class="relative">
         <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
-        <input type="text" id="gear-search-input" oninput="handleSearchFilter(this.value)" placeholder="Rechercher un équipement..." 
+        <input type="text" id="gear-search-input" oninput="window.handleSearchFilter(this.value)" placeholder="Rechercher un équipement..." 
                class="w-full bg-gray-900/90 border border-gray-800 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition">
       </div>
 
@@ -208,135 +201,9 @@
         <h3 id="modal-title" class="text-sm font-bold text-white flex items-center gap-2">
           <i data-lucide="tag" class="w-4 h-4 text-emerald-400"></i> Modifier la fiche équipement
         </h3>
-        <button onclick="toggleAddGearModal()" class="text-gray-400 hover:text-white p-1">
+        <button onclick="window.toggleAddGearModal()" class="text-gray-400 hover:text-white p-1">
           <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
 
-      <!-- Assistant IA / Auto-complétion -->
-      <div class="p-3.5 rounded-xl bg-gradient-to-r from-emerald-950/40 to-slate-900 border border-emerald-500/30 space-y-2">
-        <div class="flex items-center justify-between">
-          <label class="text-xs font-bold text-emerald-300 flex items-center gap-1.5">
-            <i data-lucide="bot" class="w-4 h-4 text-emerald-400"></i>
-            Remplir avec l'IA (URL ou Référence)
-          </label>
-          <span class="text-[10px] text-gray-400">Alltricks, Endura, Gore...</span>
-        </div>
-        <div class="flex gap-2">
-          <input type="text" id="ai-input" placeholder="ex: Endura MT500 ADV jacket ou lien https://..." class="flex-1 bg-gray-800/90 border border-gray-700 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500">
-          <button type="button" onclick="autoFillWithAI()" id="btn-ai-fetch" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition">
-            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Extraire
-          </button>
-        </div>
-        <p id="ai-feedback" class="text-[11px] text-gray-400 hidden"></p>
-      </div>
-
-      <input type="hidden" id="modal-edit-id" value="">
-
-      <!-- Fiche Formulaire détaillée -->
-      <div class="space-y-3 text-xs">
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-gray-300 font-semibold mb-1">Catégorie</label>
-            <select id="modal-category" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-white">
-              <option value="buste">Buste (Veste / Sous-couche)</option>
-              <option value="jambes">Jambes (Pantalon / Salopette)</option>
-              <option value="pieds">Pieds (Chaussures / Chaussettes)</option>
-              <option value="mains">Mains (Gants)</option>
-              <option value="cou">Cou & Tête (Tour de cou / Bonnet)</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-gray-300 font-semibold mb-1">Condition météo cible</label>
-            <select id="modal-condition" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-white">
-              <option value="all">Toutes conditions</option>
-              <option value="wet">Pluie / Boue (Imperméable)</option>
-              <option value="dry">Sec / Coupe-vent (Respirant)</option>
-              <option value="cold">Grand froid (&lt; 5°C)</option>
-              <option value="mild">Frais modéré (5°C à 15°C)</option>
-            </select>
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-gray-300 font-semibold mb-1">Nom du modèle</label>
-          <input type="text" id="modal-name" placeholder="ex: Veste Endura MT500 ADV Vert Flashy" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-white font-medium">
-        </div>
-
-        <div>
-          <label class="block text-gray-300 font-semibold mb-1">Caractéristiques techniques (Membrane, Tissu, Coupe)</label>
-          <input type="text" id="modal-specs" placeholder="ex: Pertex Shield 3L, 20k/20k étanche, aérations laser" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-white">
-        </div>
-
-        <div>
-          <label class="block text-gray-300 font-semibold mb-1 flex items-center justify-between">
-            <span>Image d'aperçu (URL web ou photo)</span>
-            <span class="text-[10px] text-gray-400">Optionnel</span>
-          </label>
-          <div class="flex gap-2">
-            <input type="url" id="modal-image" placeholder="https://... (ou laissez vide pour l'aperçu automatique)" class="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-white">
-            <label class="px-3 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-xl cursor-pointer text-gray-300 flex items-center gap-1">
-              <i data-lucide="upload" class="w-3.5 h-3.5"></i>
-              <input type="file" id="modal-file-input" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
-            </label>
-          </div>
-        </div>
-
-        <!-- Critères de Décision Stratégique -->
-        <div class="p-3 bg-gray-800/60 rounded-xl border border-gray-700 space-y-2.5">
-          <div class="font-bold text-emerald-400 flex items-center gap-1.5 text-xs">
-            <i data-lucide="target" class="w-4 h-4"></i>
-            Critères d'activation tactique (Moteur de décision)
-          </div>
-
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-gray-400 text-[11px] mb-1">Plage T° Min (°C)</label>
-              <input type="number" id="modal-temp-min" value="-5" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-2.5 py-1.5 text-white">
-            </div>
-            <div>
-              <label class="block text-gray-400 text-[11px] mb-1">Plage T° Max (°C)</label>
-              <input type="number" id="modal-temp-max" value="10" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-2.5 py-1.5 text-white">
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-gray-400 text-[11px] mb-1">Règle de décision / Recommandation spéciale</label>
-            <textarea id="modal-decision" rows="2" placeholder="ex: Ne porter qu'avec première couche fine si > 8°C pour éviter la surchauffe." class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white text-xs"></textarea>
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-gray-300 font-semibold mb-1">Lien de la fiche produit / Référence fabricant</label>
-          <input type="url" id="modal-link" placeholder="https://www.alltricks.fr/..." class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-white">
-        </div>
-      </div>
-
-      <div class="flex gap-2.5 pt-2">
-        <button onclick="toggleAddGearModal()" class="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium rounded-xl text-xs transition">Annuler</button>
-        <button onclick="saveGear()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-xs transition">Enregistrer la fiche</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Bottom Navigation -->
-  <nav class="fixed bottom-0 inset-x-0 bg-gray-900/95 backdrop-blur-md border-t border-gray-800 py-2.5 px-6 flex justify-around text-xs">
-    <button onclick="toggleTab('dashboard')" id="nav-btn-dashboard" class="flex flex-col items-center gap-1 text-emerald-400 font-semibold">
-      <i data-lucide="cloud-sun" class="w-5 h-5"></i>
-      <span>Météo & Tenue</span>
-    </button>
-    <button onclick="toggleTab('gear')" id="nav-btn-gear" class="flex flex-col items-center gap-1 text-gray-400 hover:text-white font-medium">
-      <i data-lucide="shield" class="w-5 h-5"></i>
-      <span>Mon Matériel</span>
-    </button>
-    <div class="absolute right-3 bottom-1 text-[9px] text-gray-500 font-mono select-none">
-      v3.4-AI
-    </div>
-  </nav>
-
-  <!-- Application Logic -->
-  <script>
-    const CATEGORY_IMAGES = {
-      buste: "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=240&q=80",
-      jambes: "https://images.unsplash.com/photo-1552902865-b72c031ac5ea?auto=format&fit=crop&w=240&q=80",
-      pieds: "
+      <div class="p-3.5 rounded-xl bg-gradient-to-r from-emerald-950/40 to-slate-900 border border-emerald-50
