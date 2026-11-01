@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>VTT Weather & Gear Assistant</title>
+  
+  <!-- PWA Meta -->
+  <meta name="theme-color" content="#10b981">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="VTT Gear">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <!-- Tailwind CSS & Lucide Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              400: '#34d399',
+              500: '#10b981',
+              600: '#059669',
+              900: '#064e3b',
+            },
+            dark: {
+              bg: '#090d16',
+              card: '#111827',
+              border: '#1f2937'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #090d16; color: #f3f4f6; }
+    .custom-scroll::-webkit-scrollbar { width: 4px; }
+    .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans pb-12 selection:bg-emerald-500 selection:text-white">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-50 bg-[#090d16]/90 backdrop-blur-md border-b border-gray-800/80 px-4 py-3.5 flex items-center justify-between">
+    <div class="flex items-center gap-2.5">
+      <div class="p-2 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400">
+        <i data-lucide="bike" class="w-5 h-5"></i>
+      </div>
+      <div>
+        <h1 class="text-sm font-bold tracking-tight text-white flex items-center gap-1.5">
+          VTT Weather & Gear
+          <span class="text-[10px] uppercase font-semibold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">PWA</span>
+        </h1>
+        <p class="text-[11px] text-gray-400" id="current-target-date">Calcul météo samedi...</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <button onclick="detectUserLocation()" id="btn-gps" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs font-medium border border-gray-700 transition-colors shadow-sm">
+        <i data-lucide="map-pin" class="w-3.5 h-3.5 text-emerald-400"></i>
+        <span id="gps-label">Localiser</span>
+      </button>
+      <button onclick="toggleTab('gear')" id="btn-tab-gear" class="p-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition-colors">
+        <i data-lucide="shield" class="w-4 h-4"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-2xl w-full mx-auto p-4 space-y-4">
+
+    <!-- View: Weather & Advice -->
+    <section id="view-dashboard" class="space-y-4">
+      
+      <!-- Weather Summary Card -->
+      <div class="p-4 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-900/80 border border-gray-800 shadow-xl relative overflow-hidden">
+        <div class="absolute -right-8 -bottom-8 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="flex items-center gap-2 text-xs font-medium text-emerald-400 uppercase tracking-wider mb-1">
+              <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+              <span id="forecast-card-title">Samedi Prochain (14h - 17h)</span>
+            </div>
+            <div class="flex items-baseline gap-2">
+              <span class="text-4xl font-extrabold tracking-tight text-white" id="temp-display">--°C</span>
+              <span class="text-xs text-gray-400" id="feels-display">Ressenti --°C</span>
+            </div>
+            <div class="text-xs text-gray-300 mt-1 flex items-center gap-1.5" id="desc-display">
+              <i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin text-emerald-400"></i> Analyse météo...
+            </div>
+          </div>
+          <div class="text-right space-y-1">
+            <div class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gray-800 border border-gray-700 text-xs font-medium text-gray-300" id="rain-display">
+              <i data-lucide="cloud-rain" class="w-3.5 h-3.5 text-blue-400"></i>
+              <span>-- mm</span>
+            </div>
+            <div class="block text-[11px] text-gray-400" id="wind-display">Vent: -- km/h</div>
+          </div>
+        </div>
+
+        <!-- Simulation override panel toggle -->
+        <div class="mt-4 pt-3 border-t border-gray-800 flex items-center justify-between text-xs text-gray-400">
+          <span class="flex items-center gap-1">
+            <i data-lucide="sliders" class="w-3.5 h-3.5"></i> Mode Simulateur
+          </span>
+          <button onclick="toggleSimulator()" class="text-emerald-400 hover:underline">Ajuster T° / Humidité</button>
+        </div>
+
+        <!-- Simulator Form -->
+        <div id="sim-panel" class="hidden mt-3 pt-3 border-t border-gray-800/60 space-y-3">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-[11px] text-gray-400 block mb-1">Température: <span id="sim-temp-val" class="text-white font-bold">5°C</span></label>
+              <input type="range" min="-5" max="15" value="5" step="1" id="sim-temp" oninput="runSimulation()" class="w-full accent-emerald-500">
+            </div>
+            <div>
+              <label class="text-[11px] text-gray-400 block mb-1">État du terrain / Sol</label>
+              <select id="sim-condition" onchange="runSimulation()" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                <option value="dry">Sec / Gelé</option>
+                <option value="wet" selected>Pluie / Terrain Détrempé</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tactical Equipment Recommendation -->
+      <div class="space-y-3">
+        <h2 class="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5 px-1">
+          <i data-lucide="sparkles" class="w-4 h-4 text-emerald-400"></i>
+          Tenue Recommandée pour Samedi
+        </h2>
+
+        <!-- Layer Blocks -->
+        <div class="grid gap-3" id="recommendation-cards">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- View: Gear Locker / Inventaire -->
+    <section id="view-gear" class="hidden space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-sm font-bold text-white flex items-center gap-2">
+            <i data-lucide="package" class="w-4 h-4 text-emerald-400"></i>
+            Garage & Équipements
+          </h2>
+          <p class="text-xs text-gray-400">Inventaire technique utilisé pour les recommandations</p>
+        </div>
+        <button onclick="toggleAddGearModal()" class="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold shadow transition">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i> Ajouter
+        </button>
+      </div>
+
+      <!-- Gear list -->
+      <div id="gear-list" class="space-y-2.5">
+        <!-- Injected via JS -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Add Gear Modal -->
+  <div id="gear-modal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-gray-800">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <i data-lucide="tag" class="w-4 h-4 text-emerald-400"></i> Ajouter un équipement
+        </h3>
+        <button onclick="toggleAddGearModal()" class="text-gray-400 hover:text-white">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block text-gray-400 mb-1">Catégorie</label>
+          <select id="modal-category" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-white">
+            <option value="buste">Buste (Veste / Sous-couche)</option>
+            <option value="jambes">Jambes (Pantalon / Salopette)</option>
+            <option value="pieds">Pieds (Chaussures / Chaussettes)</option>
+            <option value="mains">Mains (Gants)</option>
+            <option value="cou">Cou & Tête (Tour de cou / Bonnet)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-gray-400 mb-1">Nom du modèle</label>
+          <input type="text" id="modal-name" placeholder="ex: Veste Endura MT500 ADV Vert Flashy" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-white">
+        </div>
+        <div>
+          <label class="block text-gray-400 mb-1">Caractéristiques techniques (membrane, grammage...)</label>
+          <input type="text" id="modal-specs" placeholder="ex: Pertex Shield 3L, 20k/20k, haute visibilité" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-white">
+        </div>
+        <div>
+          <label class="block text-gray-400 mb-1">Lien de la fiche produit (Alltricks, fabricant...)</label>
+          <input type="url" id="modal-link" placeholder="https://..." class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-white">
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="toggleAddGearModal()" class="flex-1 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium rounded-xl text-xs transition">Annuler</button>
+        <button onclick="saveNewGear()" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-xs transition">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="fixed bottom-0 inset-x-0 bg-gray-900/95 backdrop-blur-md border-t border-gray-800 py-2 px-6 flex justify-around text-xs">
+    <button onclick="toggleTab('dashboard')" id="nav-btn-dashboard" class="flex flex-col items-center gap-1 text-emerald-400 font-semibold">
+      <i data-lucide="cloud-sun" class="w-5 h-5"></i>
+      <span>Météo & Tenue</span>
+    </button>
+    <button onclick="toggleTab('gear')" id="nav-btn-gear" class="flex flex-col items-center gap-1 text-gray-400 hover:text-white">
+      <i data-lucide="shield" class="w-5 h-5"></i>
+      <span>Mon Matériel</span>
+    </button>
+  </nav>
+
+  <!-- Application Logic -->
+  <script>
+    // Initial Gear Database
+    const DEFAULT_GEAR = [
+      { id: '1', category: 'buste', name: 'Endura MT500 ADV (Vert Flashy)', specs: 'Pertex Shield 3L étanche, aérations laser, visibilité haute', condition: 'wet', link: '' },
+      { id: '2', category: 'buste', name: 'Veste Gore Power Active Bleue', specs: 'Gore Windstopper coupe-vent respirant', condition: 'dry', link: '' },
+      { id: '3', category: 'buste', name: 'Sous-couche Icebreaker 200 Oasis (Taille L)', specs: '100% Laine Mérinos 200g/m² thermorégulante', condition: 'cold', link: '' },
+      { id: '4', category: 'buste', name: 'Sous-couche Synthétique Aérée', specs: 'Mesh polyester léger anti-surchauffe (> 8°C)', condition: 'mild', link: '' },
+      { id: '5', category: 'jambes', name: 'Pantalon Endura MT500 Waterproof II', specs: 'Membrane ExoShell40DR renforcée assise + zips bas', condition: 'wet', link: '' },
+      { id: '6', category: 'jambes', name: 'Salopette Thermique Gore Windstopper', specs: 'Cuissard long hiver chaud et respirant', condition: 'dry', link: '' },
+      { id: '7', category: 'pieds', name: 'Northwave Kingrock GTX', specs: 'Gore-Tex Koala + manchon néoprène montant (système goulotte)', condition: 'all', link: '' },
+      { id: '8', category: 'cou', name: 'Tour de Cou Buff ThermoNet (Moss Green)', specs: 'Primaloft fin, respirant, plat sous col haut', condition: 'cold', link: '' },
+      { id: '9', category: 'mains', name: 'Gants Hiver Imperméables', specs: 'Protection thermique et coupe-vent', condition: 'cold', link: '' }
+    ];
+
+    let gearList = JSON.parse(localStorage.getItem('vtt_gear_list')) || DEFAULT_GEAR;
+
+    // Coords State (Defaults to Voisins-le-Bretonneux / Vallée de Chevreuse)
+    let currentCoords = {
+      lat: 48.7778,
+      lon: 2.0514,
+      name: "Vallée de Chevreuse"
+    };
+
+    // Calculate next Saturday
+    function getNextSaturdayDate() {
+      const now = new Date();
+      const day = now.getDay(); // 0 is Sun, 6 is Sat
+      const diff = (6 - day + 7) % 7;
+      const saturday = new Date(now);
+      saturday.setDate(now.getDate() + (diff === 0 ? 0 : diff));
+      return saturday;
+    }
+
+    const nextSat = getNextSaturdayDate();
+    const satIsoDate = nextSat.toISOString().split('T')[0];
+    document.getElementById('current-target-date').textContent = `Fenêtre de sortie : Samedi ${nextSat.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}`;
+
+    // Geolocation Handler
+    function detectUserLocation() {
+      const label = document.getElementById('gps-label');
+      if (!navigator.geolocation) {
+        alert("La géolocalisation n'est pas prise en charge.");
+        return;
+      }
+      label.textContent = "Recherche...";
+
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          currentCoords.lat = pos.coords.latitude;
+          currentCoords.lon = pos.coords.longitude;
+          try {
+            const res = await fetch(`https://geocoding-api.open-meteo.com/v1/reverse?latitude=${currentCoords.lat}&longitude=${currentCoords.lon}&count=1&language=fr`);
+            const data = await res.json();
+            if (data.results && data.results.length > 0) {
+              currentCoords.name = data.results[0].name;
+            } else {
+              currentCoords.name = "Spot GPS";
+            }
+          } catch(e) {
+            currentCoords.name = "Spot GPS";
+          }
+          label.textContent = currentCoords.name;
+          localStorage.setItem('vtt_coords', JSON.stringify(currentCoords));
+          fetchSaturdayWeather(currentCoords.lat, currentCoords.lon);
+        },
+        (err) => {
+          alert("Signal GPS inaccessible ou refusé. Maintien du spot par défaut.");
+          label.textContent = currentCoords.name;
+          fetchSaturdayWeather(currentCoords.lat, currentCoords.lon);
+        },
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
+    }
+
+    // Weather Fetching
+    async function fetchSaturdayWeather(lat, lon) {
+      try {
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,apparent_temperature,precipitation,precipitation_probability,wind_speed_10m&timezone=auto&start_date=${satIsoDate}&end_date=${satIsoDate}`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data.hourly) {
+          // Average 14h-17h (indices 14, 15, 16)
+          const temps = [data.hourly.temperature_2m[14], data.hourly.temperature_2m[15], data.hourly.temperature_2m[16]];
+          const feels = [data.hourly.apparent_temperature[14], data.hourly.apparent_temperature[15], data.hourly.apparent_temperature[16]];
+          const rains = [data.hourly.precipitation[14], data.hourly.precipitation[15], data.hourly.precipitation[16]];
+          const winds = [data.hourly.wind_speed_10m[14], data.hourly.wind_speed_10m[15], data.hourly.wind_speed_10m[16]];
+
+          const avgTemp = Math.round(temps.reduce((a,b)=>a+b,0) / temps.length);
+          const avgFeel = Math.round(feels.reduce((a,b)=>a+b,0) / feels.length);
+          const totalRain = Math.round(rains.reduce((a,b)=>a+b,0) * 10) / 10;
+          const maxWind = Math.round(Math.max(...winds));
+
+          updateWeatherUI(avgTemp, avgFeel, totalRain, maxWind);
+          applyTacticalRules(avgTemp, totalRain > 0.2);
+        }
+      } catch (err) {
+        console.warn("Échec récupération météo live, chargement du mode nominal:", err);
+        updateWeatherUI(6, 4, 1.2, 18);
+        applyTacticalRules(6, true);
+      }
+    }
+
+    function updateWeatherUI(temp, feel, rain, wind) {
+      document.getElementById('temp-display').textContent = `${temp}°C`;
+      document.getElementById('feels-display').textContent = `Ressenti ${feel}°C`;
+      document.getElementById('rain-display').innerHTML = `<i data-lucide="cloud-rain" class="w-3.5 h-3.5 text-blue-400"></i><span>${rain} mm/h</span>`;
+      document.getElementById('wind-display').textContent = `Vent max: ${wind} km/h`;
+      
+      const desc = document.getElementById('desc-display');
+      if (rain > 0.5) {
+        desc.innerHTML = `<span class="text-blue-400 font-semibold flex items-center gap-1"><i data-lucide="cloud-drizzle" class="w-3.5 h-3.5"></i> Pluie / Humide</span>`;
+      } else if (temp <= 0) {
+        desc.innerHTML = `<span class="text-sky-300 font-semibold flex items-center gap-1"><i data-lucide="snowflake" class="w-3.5 h-3.5"></i> Gel / Froid Sec</span>`;
+      } else {
+        desc.innerHTML = `<span class="text-emerald-400 font-semibold flex items-center gap-1"><i data-lucide="sun" class="w-3.5 h-3.5"></i> Temps frais / Sec</span>`;
+      }
+      lucide.createIcons();
+    }
+
+    // Recommendation Engine based on Tactical Matrix
+    function applyTacticalRules(temp, isWet) {
+      const container = document.getElementById('recommendation-cards');
+      container.innerHTML = '';
+
+      let haut = '', bas = '', pieds = '', mains = '', cou = '';
+
+      // Haut du corps
+      if (temp < 0) {
+        if (isWet) {
+          haut = `<strong>Veste Endura MT500 ADV (Vert Flashy)</strong><br><span class="text-gray-400 text-xs">Superposer : Sous-couche Mérinos 200 + Seconde couche thermique</span>`;
+        } else {
+          haut = `<strong>Veste Gore Bleue (Windstopper)</strong><br><span class="text-gray-400 text-xs">Sous-couche Mérinos 200 + Seconde couche thermique</span>`;
+        }
+      } else if (temp >= 0 && temp < 5) {
+        if (isWet) {
+          haut = `<strong>Veste Endura MT500 ADV (Vert Flashy)</strong><br><span class="text-gray-400 text-xs">Sous-couche Mérinos 200 + Sous-couche fine d'appoint</span>`;
+        } else {
+          haut = `<strong>Veste Gore Bleue (Windstopper)</strong><br><span class="text-gray-400 text-xs">Sous-couche Mérinos 200 seule</span>`;
+        }
+      } else if (temp >= 5 && temp <= 10) {
+        if (isWet) {
+          if (temp >= 8) {
+            haut = `<strong>Veste Endura MT500 ADV (Vert Flashy)</strong><br><span class="text-amber-400 text-xs">⚠️ Risque de surchauffe : Choisir une sous-couche synthétique fine plutôt que le mérinos</span>`;
+          } else {
+            haut = `<strong>Veste Endura MT500 ADV (Vert Flashy)</strong><br><span class="text-gray-400 text-xs">Sous-couche Mérinos 200 seule au contact de la peau</span>`;
+          }
+        } else {
+          haut = `<strong>Veste Gore Bleue (Windstopper)</strong><br><span class="text-gray-400 text-xs">Sous-couche fine (Mérinos léger ou synthétique respirant)</span>`;
+        }
+      } else { // 10°C à 15°C
+        if (isWet) {
+          haut = `<strong>Veste Endura MT500 ADV (ou Gore rouge fond de sac)</strong><br><span class="text-gray-400 text-xs">T-shirt synthétique ultra-aéré (aérations latérales ouvertes)</span>`;
+        } else {
+          haut = `<strong>Maillot manches longues mi-saison léger</strong><br><span class="text-gray-400 text-xs">Sous-couche filet été (Pas de hardshell)</span>`;
+        }
+      }
+
+      // Bas du corps
+      if (isWet) {
+        bas = `<strong>Pantalon / Salopette Endura MT500 Waterproof II</strong><br><span class="text-gray-400 text-xs">Cuissard court en dessous si > 5°C, ou collant fin si froid</span>`;
+      } else {
+        bas = `<strong>Salopette Thermique Gore Hiver</strong><br><span class="text-gray-400 text-xs">Protection coupe-vent et respirabilité maximale</span>`;
+      }
+
+      // Pieds (Kingrock GTX)
+      pieds = `<strong>Northwave Kingrock GTX</strong><br><span class="text-emerald-400 text-xs font-semibold">⚠️ Règle impérative : Bas du pantalon verrouillé PAR-DESSUS le manchon néoprène (effet goulotte)</span>`;
+
+      // Cou & Tête
+      if (temp <= 7) {
+        cou = `<strong>Tour de Cou Buff ThermoNet (Moss Green)</strong><br><span class="text-gray-400 text-xs">À plat sous le col fermé + bandeau/bonnet sous-casque</span>`;
+      } else {
+        cou = `<strong>Tour de Cou fin ou Buff replié bas</strong><br><span class="text-gray-400 text-xs">Dégager le cou dès la première bosse pour réguler</span>`;
+      }
+
+      // Mains
+      mains = temp < 5 ? `<strong>Gants Hiver Grand Froid Déperlants</strong>` : `<strong>Gants Mi-Saison Coupe-Vent Souples</strong>`;
+
+      const cardsData = [
+        { icon: 'shield', title: 'Buste & Couches', content: haut, border: 'border-emerald-500/40' },
+        { icon: 'compass', title: 'Bas du Corps', content: bas, border: 'border-blue-500/40' },
+        { icon: 'footprints', title: 'Pieds & Étanchéité', content: pieds, border: 'border-amber-500/40' },
+        { icon: 'smile', title: 'Protection Cou & Tête', content: cou, border: 'border-purple-500/40' },
+        { icon: 'hand', title: 'Mains', content: mains, border: 'border-gray-700' }
+      ];
+
+      cardsData.forEach(c => {
+        const el = document.createElement('div');
+        el.className = `p-3.5 rounded-xl bg-gray-900/90 border ${c.border} flex items-start gap-3 shadow-md`;
+        el.innerHTML = `
+          <div class="p-2 rounded-lg bg-gray-800 text-emerald-400 shrink-0 mt-0.5">
+            <i data-lucide="${c.icon}" class="w-4 h-4"></i>
+          </div>
+          <div class="text-xs leading-relaxed text-gray-200">
+            <div class="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-0.5">${c.title}</div>
+            ${c.content}
+          </div>
+        `;
+        container.appendChild(el);
+      });
+
+      lucide.createIcons();
+    }
+
+    // Simulator Toggle & Handler
+    function toggleSimulator() {
+      const p = document.getElementById('sim-panel');
+      p.classList.toggle('hidden');
+    }
+
+    function runSimulation() {
+      const t = parseInt(document.getElementById('sim-temp').value, 10);
+      const isWet = document.getElementById('sim-condition').value === 'wet';
+      document.getElementById('sim-temp-val').textContent = `${t}°C`;
+      updateWeatherUI(t, t - 2, isWet ? 2.5 : 0.0, 15);
+      applyTacticalRules(t, isWet);
+    }
+
+    // Tabs Switching
+    function toggleTab(tab) {
+      const dash = document.getElementById('view-dashboard');
+      const gear = document.getElementById('view-gear');
+      const btnDash = document.getElementById('nav-btn-dashboard');
+      const btnGear = document.getElementById('nav-btn-gear');
+
+      if (tab === 'dashboard') {
+        dash.classList.remove('hidden');
+        gear.classList.add('hidden');
+        btnDash.className = "flex flex-col items-center gap-1 text-emerald-400 font-semibold";
+        btnGear.className = "flex flex-col items-center gap-1 text-gray-400 hover:text-white";
+      } else {
+        dash.classList.add('hidden');
+        gear.classList.remove('hidden');
+        btnDash.className = "flex flex-col items-center gap-1 text-gray-400 hover:text-white";
+        btnGear.className = "flex flex-col items-center gap-1 text-emerald-400 font-semibold";
+        renderGearList();
+      }
+    }
+
+    // Gear Manager
+    function renderGearList() {
+      const list = document.getElementById('gear-list');
+      list.innerHTML = '';
+      gearList.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'p-3 rounded-xl bg-gray-900 border border-gray-800 flex items-center justify-between text-xs';
+        div.innerHTML = `
+          <div>
+            <div class="font-bold text-white flex items-center gap-2">
+              ${item.name}
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-gray-800 text-gray-400 border border-gray-700 uppercase">${item.category}</span>
+            </div>
+            <div class="text-gray-400 mt-0.5">${item.specs}</div>
+          </div>
+          <button onclick="deleteGear('${item.id}')" class="text-gray-500 hover:text-red-400 p-1.5">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+        `;
+        list.appendChild(div);
+      });
+      lucide.createIcons();
+    }
+
+    function toggleAddGearModal() {
+      document.getElementById('gear-modal').classList.toggle('hidden');
+    }
+
+    function saveNewGear() {
+      const cat = document.getElementById('modal-category').value;
+      const name = document.getElementById('modal-name').value.trim();
+      const specs = document.getElementById('modal-specs').value.trim();
+      const link = document.getElementById('modal-link').value.trim();
+
+      if (!name) return alert("Veuillez renseigner un nom.");
+
+      const newItem = { id: Date.now().toString(), category: cat, name, specs, link };
+      gearList.push(newItem);
+      localStorage.setItem('vtt_gear_list', JSON.stringify(gearList));
+      toggleAddGearModal();
+      renderGearList();
+    }
+
+    function deleteGear(id) {
+      gearList = gearList.filter(g => g.id !== id);
+      localStorage.setItem('vtt_gear_list', JSON.stringify(gearList));
+      renderGearList();
+    }
+
+    // Startup & Service Worker
+    window.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      const saved = localStorage.getItem('vtt_coords');
+      if (saved) {
+        try {
+          currentCoords = JSON.parse(saved);
+          document.getElementById('gps-label').textContent = currentCoords.name;
+        } catch(e){}
+      }
+      fetchSaturdayWeather(currentCoords.lat, currentCoords.lon);
+
+      // Register SW
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('SW enregistré:', reg.scope))
+          .catch(err => console.error('Erreur SW:', err));
+      }
+    });
+  </script>
+</body>
+</html>
