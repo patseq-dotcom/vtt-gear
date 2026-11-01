@@ -1,15 +1,13 @@
-# VTT Weather & Gear Assistant (PWA v3)
+# VTT Weather & Gear Assistant (PWA v3.1)
 
-Package complet avec polices agrandies et zoom tactile débloqué.
+Nouveautés de cette version :
+1. **Numéro de version bien visible** : Badge vert `v3.1` dans l'en-tête et tag discret `v3.1-pwa` en bas à droite pour vérifier le rechargement immédiat.
+2. **Plage horaire élargie 13h45 - 19h00** : Bandeau d'évolution heure par heure détaillant la température, les précipitations (mm) et les rafales de vent pour chaque créneau (14h, 15h, 16h, 17h, 18h, 19h).
+3. **Lieu GPS retenu affiché** : Badge explicite « Lieu : [Nom de la commune] » sous le titre de la carte météo.
+4. **Service Worker v4** : Purge automatique de l'ancien cache local du smartphone.
 
-## Fichiers inclus :
-1. `index.html` : Code de l'application (viewport réactif, zoom libre, polices optimisées lisibilité mobile).
-2. `manifest.json` : Déclaration PWA.
-3. `sw.js` : Service Worker v3 (force l'actualisation du cache mobile).
-4. `icon-192.png` et `icon-512.png` : Icônes d'installation.
-
-## Procédure de mise à jour sur GitHub :
-1. Sur GitHub dans votre dépôt `vtt-gear`, cliquez sur **Add file > Upload files**.
-2. Glissez-déposez les fichiers de l'archive.
+## Déploiement :
+1. Décompressez cette archive.
+2. Glissez-déposez l'ensemble des fichiers sur GitHub dans votre dépôt (Add file > Upload files).
 3. Cliquez sur **Commit changes**.
-4. Sur le smartphone, fermez et rouvrez l'application.
+4. Sur le smartphone, fermez et rouvrez l'application (ou faites glisser vers le bas pour actualiser).

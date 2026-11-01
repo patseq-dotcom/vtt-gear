@@ -42,12 +42,12 @@
   </script>
   <style>
     body { background-color: #090d16; color: #f3f4f6; }
-    .custom-scroll::-webkit-scrollbar { width: 4px; }
+    .custom-scroll::-webkit-scrollbar { height: 4px; width: 4px; }
     .custom-scroll::-webkit-scrollbar-track { background: transparent; }
     .custom-scroll::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
   </style>
 </head>
-<body class="min-h-screen flex flex-col font-sans text-base pb-20 selection:bg-emerald-500 selection:text-white">
+<body class="min-h-screen flex flex-col font-sans text-base pb-24 selection:bg-emerald-500 selection:text-white">
 
   <!-- Header -->
   <header class="sticky top-0 z-50 bg-[#090d16]/95 backdrop-blur-md border-b border-gray-800 px-4 py-3.5 flex items-center justify-between">
@@ -56,10 +56,10 @@
         <i data-lucide="bike" class="w-6 h-6"></i>
       </div>
       <div>
-        <h1 class="text-base font-bold tracking-tight text-white flex items-center gap-2">
-          VTT Weather & Gear
-          <span class="text-xs uppercase font-semibold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">PWA</span>
-        </h1>
+        <div class="flex items-center gap-2">
+          <h1 class="text-base font-bold tracking-tight text-white">VTT Weather & Gear</h1>
+          <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">v3.1</span>
+        </div>
         <p class="text-xs text-gray-300 font-medium" id="current-target-date">Calcul météo samedi...</p>
       </div>
     </div>
@@ -84,12 +84,23 @@
       <div class="p-5 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-900/90 border border-gray-800 shadow-xl relative overflow-hidden">
         <div class="absolute -right-8 -bottom-8 w-36 h-36 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
 
+        <!-- Spot & Title banner -->
+        <div class="mb-3 pb-3 border-b border-gray-800/80 flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2 text-xs font-bold text-emerald-400 uppercase tracking-wider">
+            <i data-lucide="calendar" class="w-4 h-4"></i>
+            <span id="forecast-card-title">Samedi Prochain (Plage 13h45 - 19h)</span>
+          </div>
+          <!-- Explicit spot location -->
+          <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-800/80 border border-gray-700 text-xs text-gray-200 font-medium">
+            <i data-lucide="map-pin" class="w-3.5 h-3.5 text-emerald-400 shrink-0"></i>
+            <span class="text-gray-400">Lieu :</span>
+            <span id="spot-location-name" class="text-emerald-300 font-semibold">Vallée de Chevreuse</span>
+          </div>
+        </div>
+
+        <!-- Global Averages Window -->
         <div class="flex items-start justify-between">
           <div>
-            <div class="flex items-center gap-2 text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1.5">
-              <i data-lucide="calendar" class="w-4 h-4"></i>
-              <span id="forecast-card-title">Samedi Prochain (14h - 17h)</span>
-            </div>
             <div class="flex items-baseline gap-2.5">
               <span class="text-4xl md:text-5xl font-extrabold tracking-tight text-white" id="temp-display">--°C</span>
               <span class="text-sm font-medium text-gray-300" id="feels-display">Ressenti --°C</span>
@@ -104,6 +115,23 @@
               <span>-- mm</span>
             </div>
             <div class="block text-xs font-medium text-gray-300" id="wind-display">Vent: -- km/h</div>
+          </div>
+        </div>
+
+        <!-- Detailed Hourly Breakdown 13h45 - 19h -->
+        <div class="mt-4 pt-3.5 border-t border-gray-800">
+          <div class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2 flex items-center gap-1.5">
+            <i data-lucide="clock" class="w-3.5 h-3.5 text-emerald-400"></i>
+            Évolution heure par heure (14h - 19h)
+          </div>
+          <div id="hourly-forecast-row" class="grid grid-cols-6 gap-1.5 text-center overflow-x-auto pb-1 custom-scroll">
+            <!-- Injected dynamically -->
+            <div class="p-2 rounded-lg bg-gray-800/50 text-[11px] text-gray-400">14h<br>--</div>
+            <div class="p-2 rounded-lg bg-gray-800/50 text-[11px] text-gray-400">15h<br>--</div>
+            <div class="p-2 rounded-lg bg-gray-800/50 text-[11px] text-gray-400">16h<br>--</div>
+            <div class="p-2 rounded-lg bg-gray-800/50 text-[11px] text-gray-400">17h<br>--</div>
+            <div class="p-2 rounded-lg bg-gray-800/50 text-[11px] text-gray-400">18h<br>--</div>
+            <div class="p-2 rounded-lg bg-gray-800/50 text-[11px] text-gray-400">19h<br>--</div>
           </div>
         </div>
 
@@ -137,7 +165,7 @@
       <div class="space-y-3.5">
         <h2 class="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-2 px-1">
           <i data-lucide="sparkles" class="w-4 h-4 text-emerald-400"></i>
-          Tenue Recommandée pour Samedi
+          Tenue Recommandée pour Samedi (13h45 - 19h)
         </h2>
 
         <!-- Layer Blocks -->
@@ -215,7 +243,7 @@
     </div>
   </div>
 
-  <!-- Bottom Navigation -->
+  <!-- Bottom Navigation with Build Version Indicator -->
   <nav class="fixed bottom-0 inset-x-0 bg-gray-900/95 backdrop-blur-md border-t border-gray-800 py-2.5 px-6 flex justify-around text-xs">
     <button onclick="toggleTab('dashboard')" id="nav-btn-dashboard" class="flex flex-col items-center gap-1 text-emerald-400 font-semibold">
       <i data-lucide="cloud-sun" class="w-5 h-5"></i>
@@ -225,6 +253,9 @@
       <i data-lucide="shield" class="w-5 h-5"></i>
       <span>Mon Matériel</span>
     </button>
+    <div class="absolute right-3 bottom-1 text-[9px] text-gray-500 font-mono select-none">
+      v3.1-pwa
+    </div>
   </nav>
 
   <!-- Application Logic -->
@@ -248,7 +279,7 @@
     let currentCoords = {
       lat: 48.7778,
       lon: 2.0514,
-      name: "Vallée de Chevreuse"
+      name: "Vallée de Chevreuse (Voisins-le-Bx)"
     };
 
     // Calculate next Saturday
@@ -268,6 +299,7 @@
     // Geolocation Handler
     function detectUserLocation() {
       const label = document.getElementById('gps-label');
+      const spotNameEl = document.getElementById('spot-location-name');
       if (!navigator.geolocation) {
         alert("La géolocalisation n'est pas prise en charge.");
         return;
@@ -282,38 +314,46 @@
             const res = await fetch(`https://geocoding-api.open-meteo.com/v1/reverse?latitude=${currentCoords.lat}&longitude=${currentCoords.lon}&count=1&language=fr`);
             const data = await res.json();
             if (data.results && data.results.length > 0) {
-              currentCoords.name = data.results[0].name;
+              const place = data.results[0];
+              currentCoords.name = `${place.name} (${place.admin2 || place.admin1 || ''})`;
             } else {
-              currentCoords.name = "Spot GPS";
+              currentCoords.name = `GPS (${currentCoords.lat.toFixed(2)}°, ${currentCoords.lon.toFixed(2)}°)`;
             }
           } catch(e) {
-            currentCoords.name = "Spot GPS";
+            currentCoords.name = `GPS (${currentCoords.lat.toFixed(2)}°, ${currentCoords.lon.toFixed(2)}°)`;
           }
-          label.textContent = currentCoords.name;
+          label.textContent = "Actualisé";
+          spotNameEl.textContent = currentCoords.name;
           localStorage.setItem('vtt_coords', JSON.stringify(currentCoords));
           fetchSaturdayWeather(currentCoords.lat, currentCoords.lon);
         },
         (err) => {
           alert("Signal GPS inaccessible ou refusé. Maintien du spot par défaut.");
-          label.textContent = currentCoords.name;
+          label.textContent = "Localiser";
+          spotNameEl.textContent = currentCoords.name;
           fetchSaturdayWeather(currentCoords.lat, currentCoords.lon);
         },
         { enableHighAccuracy: true, timeout: 8000 }
       );
     }
 
-    // Weather Fetching
+    // Weather Fetching with 13h45 - 19h Focus (hours 14, 15, 16, 17, 18, 19)
     async function fetchSaturdayWeather(lat, lon) {
+      const spotNameEl = document.getElementById('spot-location-name');
+      spotNameEl.textContent = currentCoords.name;
+
       try {
         const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,apparent_temperature,precipitation,precipitation_probability,wind_speed_10m&timezone=auto&start_date=${satIsoDate}&end_date=${satIsoDate}`;
         const res = await fetch(url);
         const data = await res.json();
 
         if (data.hourly) {
-          const temps = [data.hourly.temperature_2m[14], data.hourly.temperature_2m[15], data.hourly.temperature_2m[16]];
-          const feels = [data.hourly.apparent_temperature[14], data.hourly.apparent_temperature[15], data.hourly.apparent_temperature[16]];
-          const rains = [data.hourly.precipitation[14], data.hourly.precipitation[15], data.hourly.precipitation[16]];
-          const winds = [data.hourly.wind_speed_10m[14], data.hourly.wind_speed_10m[15], data.hourly.wind_speed_10m[16]];
+          // Window 13h45 to 19h: hours 14, 15, 16, 17, 18, 19
+          const hoursRange = [14, 15, 16, 17, 18, 19];
+          const temps = hoursRange.map(h => data.hourly.temperature_2m[h] ?? 0);
+          const feels = hoursRange.map(h => data.hourly.apparent_temperature[h] ?? 0);
+          const rains = hoursRange.map(h => data.hourly.precipitation[h] ?? 0);
+          const winds = hoursRange.map(h => data.hourly.wind_speed_10m[h] ?? 0);
 
           const avgTemp = Math.round(temps.reduce((a,b)=>a+b,0) / temps.length);
           const avgFeel = Math.round(feels.reduce((a,b)=>a+b,0) / feels.length);
@@ -321,24 +361,49 @@
           const maxWind = Math.round(Math.max(...winds));
 
           updateWeatherUI(avgTemp, avgFeel, totalRain, maxWind);
+          updateHourlyRow(hoursRange, temps, rains, winds);
           applyTacticalRules(avgTemp, totalRain > 0.2);
         }
       } catch (err) {
         console.warn("Échec récupération météo live, chargement du mode nominal:", err);
         updateWeatherUI(6, 4, 1.2, 18);
+        updateHourlyRow([14,15,16,17,18,19], [7, 7, 6, 6, 5, 4], [0.3, 0.4, 0.3, 0.2, 0, 0], [15, 18, 16, 14, 12, 10]);
         applyTacticalRules(6, true);
       }
+    }
+
+    function updateHourlyRow(hours, temps, rains, winds) {
+      const container = document.getElementById('hourly-forecast-row');
+      container.innerHTML = '';
+      hours.forEach((h, idx) => {
+        const t = Math.round(temps[idx]);
+        const r = rains[idx];
+        const w = Math.round(winds[idx]);
+        const isRainy = r > 0.1;
+
+        const cell = document.createElement('div');
+        cell.className = `p-2 rounded-xl border flex flex-col items-center justify-between text-xs ${
+          isRainy ? 'bg-blue-950/40 border-blue-800/60 text-blue-200' : 'bg-gray-800/70 border-gray-700/60 text-gray-200'
+        }`;
+        cell.innerHTML = `
+          <span class="font-bold text-gray-400 text-[11px]">${h}h00</span>
+          <span class="font-extrabold text-sm my-0.5 ${t <= 3 ? 'text-cyan-300' : 'text-white'}">${t}°</span>
+          <span class="text-[10px] ${isRainy ? 'text-blue-300 font-semibold' : 'text-gray-400'}">${r > 0 ? r + 'mm' : 'Sec'}</span>
+          <span class="text-[9px] text-gray-400 mt-0.5">${w}km/h</span>
+        `;
+        container.appendChild(cell);
+      });
     }
 
     function updateWeatherUI(temp, feel, rain, wind) {
       document.getElementById('temp-display').textContent = `${temp}°C`;
       document.getElementById('feels-display').textContent = `Ressenti ${feel}°C`;
-      document.getElementById('rain-display').innerHTML = `<i data-lucide="cloud-rain" class="w-4 h-4 text-blue-400"></i><span>${rain} mm/h</span>`;
-      document.getElementById('wind-display').textContent = `Vent: ${wind} km/h`;
+      document.getElementById('rain-display').innerHTML = `<i data-lucide="cloud-rain" class="w-4 h-4 text-blue-400"></i><span>${rain} mm total</span>`;
+      document.getElementById('wind-display').textContent = `Vent max: ${wind} km/h`;
       
       const desc = document.getElementById('desc-display');
       if (rain > 0.5) {
-        desc.innerHTML = `<span class="text-blue-400 font-semibold flex items-center gap-1.5"><i data-lucide="cloud-drizzle" class="w-4 h-4"></i> Pluie / Terrain Détrempé</span>`;
+        desc.innerHTML = `<span class="text-blue-400 font-semibold flex items-center gap-1.5"><i data-lucide="cloud-drizzle" class="w-4 h-4"></i> Pluie / Humide sur la sortie</span>`;
       } else if (temp <= 0) {
         desc.innerHTML = `<span class="text-sky-300 font-semibold flex items-center gap-1.5"><i data-lucide="snowflake" class="w-4 h-4"></i> Gel / Froid Sec</span>`;
       } else {
@@ -363,31 +428,31 @@
         }
       } else if (temp >= 0 && temp < 5) {
         if (isWet) {
-          haut = `<strong class="text-white text-sm">Veste Endura MT500 ADV (Vert Flashy)</strong><div class="text-gray-300 text-xs mt-0.5">Sous-couche Mérinos 200 + Sous-couche fine d'appoint</div>`;
+          haut = `<strong class="text-white text-sm">Veste Endura MT500 ADV (Vert Flashy)</strong><div class="text-gray-300 text-xs mt-0.5">Sous-couche Mérinos 200 + Sous-couche fine d'appoint (attention à la tombée du jour à 18h)</div>`;
         } else {
           haut = `<strong class="text-white text-sm">Veste Gore Bleue (Windstopper)</strong><div class="text-gray-300 text-xs mt-0.5">Sous-couche Mérinos 200 seule</div>`;
         }
       } else if (temp >= 5 && temp <= 10) {
         if (isWet) {
           if (temp >= 8) {
-            haut = `<strong class="text-white text-sm">Veste Endura MT500 ADV (Vert Flashy)</strong><div class="text-amber-300 text-xs mt-0.5 font-medium">⚠️ Risque de surchauffe : Privilégier une sous-couche synthétique respirante fine au lieu du mérinos.</div>`;
+            haut = `<strong class="text-white text-sm">Veste Endura MT500 ADV (Vert Flashy)</strong><div class="text-amber-300 text-xs mt-0.5 font-medium">⚠️ Risque de surchauffe : Choisir une première couche synthétique aérée plutôt que le mérinos 200.</div>`;
           } else {
-            haut = `<strong class="text-white text-sm">Veste Endura MT500 ADV (Vert Flashy)</strong><div class="text-gray-300 text-xs mt-0.5">Sous-couche Mérinos 200 seule au contact de la peau</div>`;
+            haut = `<strong class="text-white text-sm">Veste Endura MT500 ADV (Vert Flashy)</strong><div class="text-gray-300 text-xs mt-0.5">Sous-couche Mérinos 200 seule au contact direct de la peau</div>`;
           }
         } else {
           haut = `<strong class="text-white text-sm">Veste Gore Bleue (Windstopper)</strong><div class="text-gray-300 text-xs mt-0.5">Sous-couche fine (Mérinos léger ou synthétique respirant)</div>`;
         }
       } else { // 10°C à 15°C
         if (isWet) {
-          haut = `<strong class="text-white text-sm">Veste Endura MT500 ADV (ou Gore rouge)</strong><div class="text-gray-300 text-xs mt-0.5">T-shirt synthétique ultra-aéré (aérations latérales grandes ouvertes)</div>`;
+          haut = `<strong class="text-white text-sm">Veste Endura MT500 ADV (ou Gore rouge fond de sac)</strong><div class="text-gray-300 text-xs mt-0.5">T-shirt technique ultra-aéré (ventilation latérale grande ouverte)</div>`;
         } else {
-          haut = `<strong class="text-white text-sm">Maillot manches longues mi-saison léger</strong><div class="text-gray-300 text-xs mt-0.5">Sous-couche filet été (Pas de veste hardshell)</div>`;
+          haut = `<strong class="text-white text-sm">Maillot manches longues mi-saison léger</strong><div class="text-gray-300 text-xs mt-0.5">Sous-couche filet été (Pas de hardshell)</div>`;
         }
       }
 
       // Bas du corps
       if (isWet) {
-        bas = `<strong class="text-white text-sm">Pantalon / Salopette Endura MT500 Waterproof II</strong><div class="text-gray-300 text-xs mt-0.5">Cuissard court en dessous si > 5°C, ou collant fin si grand froid</div>`;
+        bas = `<strong class="text-white text-sm">Pantalon / Salopette Endura MT500 Waterproof II</strong><div class="text-gray-300 text-xs mt-0.5">Cuissard court en dessous si > 5°C, ou collant fin si froid en fin d'après-midi</div>`;
       } else {
         bas = `<strong class="text-white text-sm">Salopette Thermique Gore Hiver</strong><div class="text-gray-300 text-xs mt-0.5">Protection coupe-vent et respirabilité maximale</div>`;
       }
@@ -397,15 +462,15 @@
 
       // Cou & Tête
       if (temp <= 7) {
-        cou = `<strong class="text-white text-sm">Tour de Cou Buff ThermoNet (Moss Green)</strong><div class="text-gray-300 text-xs mt-0.5">À plat sous le col zippé + bandeau ou bonnet sous-casque</div>`;
+        cou = `<strong class="text-white text-sm">Tour de Cou Buff ThermoNet (Moss Green)</strong><div class="text-gray-300 text-xs mt-0.5">À plat sous le col zippé + bandeau ou bonnet sous-casque thermique</div>`;
       } else {
-        cou = `<strong class="text-white text-sm">Tour de Cou fin ou Buff replié bas</strong><div class="text-gray-300 text-xs mt-0.5">Dégager la nuque en montée pour réguler la chaleur</div>`;
+        cou = `<strong class="text-white text-sm">Tour de Cou fin ou Buff replié bas</strong><div class="text-gray-300 text-xs mt-0.5">Dégager la gorge lors des ascensions pour évacuer la chaleur</div>`;
       }
 
       // Mains
       mains = temp < 5 
-        ? `<strong class="text-white text-sm">Gants Hiver Grand Froid Déperlants</strong><div class="text-gray-300 text-xs mt-0.5">Isolation thermique et coupe-vent maximale</div>`
-        : `<strong class="text-white text-sm">Gants Mi-Saison Coupe-Vent Souples</strong><div class="text-gray-300 text-xs mt-0.5">Précision de pilotage et respirabilité</div>`;
+        ? `<strong class="text-white text-sm">Gants Hiver Grand Froid Déperlants</strong><div class="text-gray-300 text-xs mt-0.5">Protection renforcée pour la tombée de la nuit (18h-19h)</div>`
+        : `<strong class="text-white text-sm">Gants Mi-Saison Coupe-Vent Souples</strong><div class="text-gray-300 text-xs mt-0.5">Précision des leviers et respirabilité</div>`;
 
       const cardsData = [
         { icon: 'shield', title: 'Buste & Superposition', content: haut, border: 'border-emerald-500/50' },
@@ -444,6 +509,8 @@
       const isWet = document.getElementById('sim-condition').value === 'wet';
       document.getElementById('sim-temp-val').textContent = `${t}°C`;
       updateWeatherUI(t, t - 2, isWet ? 2.5 : 0.0, 15);
+      // Simulate gradient for hourly
+      updateHourlyRow([14,15,16,17,18,19], [t+1, t+1, t, t, t-1, t-2], isWet ? [0.4, 0.6, 0.5, 0.4, 0.3, 0.3] : [0,0,0,0,0,0], [15, 18, 16, 14, 12, 10]);
       applyTacticalRules(t, isWet);
     }
 
@@ -524,15 +591,19 @@
       if (saved) {
         try {
           currentCoords = JSON.parse(saved);
-          document.getElementById('gps-label').textContent = currentCoords.name;
+          document.getElementById('gps-label').textContent = "Localisé";
+          document.getElementById('spot-location-name').textContent = currentCoords.name;
         } catch(e){}
       }
       fetchSaturdayWeather(currentCoords.lat, currentCoords.lon);
 
-      // Register SW
+      // Register SW v4
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('SW enregistré:', reg.scope))
+          .then(reg => {
+            console.log('SW v4 enregistré:', reg.scope);
+            reg.update();
+          })
           .catch(err => console.error('Erreur SW:', err));
       }
     });
