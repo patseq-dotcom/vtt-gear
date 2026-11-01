@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vtt-gear-v2';
+const CACHE_NAME = 'vtt-gear-v3';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -30,7 +30,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // Pour les API externes météo/geocoding : Réseau d'abord
+  // Pour Open-Meteo API : réseau d'abord
   if (url.origin.includes('open-meteo.com')) {
     event.respondWith(
       fetch(event.request).catch(() => caches.match(event.request))
@@ -38,7 +38,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Cache First pour les fichiers de l'application
+  // Pour les fichiers statiques de l'app : cache first
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       return cachedResponse || fetch(event.request).then((networkResponse) => {
