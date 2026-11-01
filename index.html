@@ -60,7 +60,7 @@
       <div>
         <div class="flex items-center gap-2">
           <h1 class="text-sm md:text-base font-bold tracking-tight text-white">VTT Weather & Gear</h1>
-          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">v3.5-AI</span>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">v3.6-AI</span>
         </div>
         <p class="text-[11px] text-gray-300 font-medium" id="current-target-date">Calcul météo samedi...</p>
       </div>
@@ -86,7 +86,6 @@
       <div class="p-5 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-900/90 border border-gray-800 shadow-xl relative overflow-hidden">
         <div class="absolute -right-8 -bottom-8 w-36 h-36 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
 
-        <!-- Spot & Title banner -->
         <div class="mb-3 pb-3 border-b border-gray-800/80 flex flex-wrap items-center justify-between gap-2">
           <div class="flex items-center gap-2 text-xs font-bold text-emerald-400 uppercase tracking-wider">
             <i data-lucide="calendar" class="w-4 h-4"></i>
@@ -99,7 +98,6 @@
           </div>
         </div>
 
-        <!-- Global Averages Window -->
         <div class="flex items-start justify-between">
           <div>
             <div class="flex items-baseline gap-2.5">
@@ -161,7 +159,7 @@
         </div>
       </div>
 
-      <!-- Tactical Equipment Recommendation (All 5 Categories) -->
+      <!-- Tactical Equipment Recommendation (avec aperçus visuels) -->
       <div class="space-y-3.5">
         <h2 class="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-2 px-1">
           <i data-lucide="sparkles" class="w-4 h-4 text-emerald-400"></i>
@@ -174,7 +172,6 @@
 
     <!-- View: Gear Locker / Inventaire -->
     <section id="view-gear" class="hidden space-y-4">
-      
       <div class="flex items-center justify-between">
         <div>
           <h2 class="text-base font-bold text-white tracking-tight">Garage & Fiches Matériel</h2>
@@ -185,17 +182,14 @@
         </button>
       </div>
 
-      <!-- Category Filter Carousel (Scrollable Pills with Counters) -->
       <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 text-xs" id="category-filter-bar"></div>
 
-      <!-- Search Input Bar -->
       <div class="relative">
         <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
         <input type="text" id="gear-search-input" placeholder="Rechercher un équipement..." 
                class="w-full bg-gray-900/90 border border-gray-800 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition">
       </div>
 
-      <!-- Gear list (Cards matching photo layout with thumbnail & decision criteria) -->
       <div id="gear-list" class="space-y-3"></div>
     </section>
 
@@ -214,7 +208,6 @@
         </button>
       </div>
 
-      <!-- Assistant IA / Auto-complétion -->
       <div class="p-3.5 rounded-xl bg-gradient-to-r from-emerald-950/40 to-slate-900 border border-emerald-500/30 space-y-2">
         <div class="flex items-center justify-between">
           <label class="text-xs font-bold text-emerald-300 flex items-center gap-1.5">
@@ -234,7 +227,6 @@
 
       <input type="hidden" id="modal-edit-id" value="">
 
-      <!-- Formulaire détaillé -->
       <div class="space-y-3 text-xs">
         <div class="grid grid-cols-2 gap-3">
           <div>
@@ -269,7 +261,6 @@
           <input type="text" id="modal-specs" placeholder="ex: Pertex Shield 3L, 20k/20k étanche, aérations laser" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-white">
         </div>
 
-        <!-- Image URL / Local upload -->
         <div>
           <label class="block text-gray-300 font-semibold mb-1 flex items-center justify-between">
             <span>Image d'aperçu (URL web ou photo locale)</span>
@@ -284,7 +275,6 @@
           </div>
         </div>
 
-        <!-- Critères de Décision Stratégique -->
         <div class="p-3 bg-gray-800/60 rounded-xl border border-gray-700 space-y-2.5">
           <div class="font-bold text-emerald-400 flex items-center gap-1.5 text-xs">
             <i data-lucide="target" class="w-4 h-4"></i>
@@ -332,14 +322,14 @@
       <span>Mon Matériel</span>
     </button>
     <div class="absolute right-3 bottom-1 text-[9px] text-gray-500 font-mono select-none">
-      v3.5-AI
+      v3.6-AI
     </div>
   </nav>
 
-  <!-- Application Logic (Clean Event Listeners, Zero Inline Onclick Conflicts) -->
+  <!-- Application Logic -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      // 1. Purge complète des anciens Service Workers et caches
+      // 1. Purge complète des anciens Service Workers
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then(regs => {
           for (let r of regs) r.unregister();
@@ -360,13 +350,13 @@
         cou: "https://images.unsplash.com/photo-1520903920243-00d872a2d1c9?auto=format&fit=crop&w=240&q=80"
       };
 
-      // 3. Base d'équipements complète par défaut (9 matériels avec règles fines)
+      // 3. Base d'équipements complète par défaut
       const DEFAULT_GEAR = [
         {
           id: '1',
           category: 'buste',
           name: 'Endura MT500 ADV (Vert Flashy)',
-          specs: 'Membrane Pertex Shield 3 couches, imperméabilité 20 000 mm, respirabilité 20 000 g/m²',
+          specs: 'Membrane Pertex Shield 3 couches, 20 000 mm étanche, respirabilité 20k',
           condition: 'wet',
           tempMin: -5,
           tempMax: 12,
@@ -378,7 +368,7 @@
           id: '2',
           category: 'buste',
           name: 'Veste Gore Power Active Bleue',
-          specs: 'Membrane Gore Windstopper coupe-vent 100%, hautement respirante, déperlante légère',
+          specs: 'Membrane Gore Windstopper coupe-vent 100%, hautement respirante',
           condition: 'dry',
           tempMin: -5,
           tempMax: 10,
@@ -390,11 +380,11 @@
           id: '3',
           category: 'buste',
           name: 'Sous-couche Icebreaker 200 Oasis',
-          specs: '100% Laine Mérinos naturelle 200 g/m², neutralisation des odeurs, chaleur constante même mouillé',
+          specs: '100% Laine Mérinos naturelle 200 g/m², neutralisation des odeurs',
           condition: 'cold',
           tempMin: -5,
           tempMax: 7,
-          decisionRule: 'Idéal sous veste de -5°C à 7°C. Au-delà de 8°C, risque de surchauffe et séchage trop lent en montée raide.',
+          decisionRule: 'Idéal sous veste de -5°C à 7°C. Au-delà de 8°C, risque de surchauffe et séchage trop lent en montée.',
           image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=240&q=80',
           link: ''
         },
@@ -402,7 +392,7 @@
           id: '4',
           category: 'buste',
           name: 'Sous-couche Synthétique Aérée',
-          specs: 'Mesh polyester/polypropylène gaufré ultra-respirant à séchage instantané',
+          specs: 'Mesh polyester ultra-respirant à séchage instantané',
           condition: 'mild',
           tempMin: 8,
           tempMax: 15,
@@ -414,7 +404,7 @@
           id: '5',
           category: 'jambes',
           name: 'Pantalon Endura MT500 Waterproof II',
-          specs: 'Tissu ExoShell40DR 3 couches étanche, empiècements assise ultra-résistants, préformé genouillères',
+          specs: 'Tissu ExoShell40DR 3 couches étanche, fessier cordura renforcé',
           condition: 'wet',
           tempMin: -5,
           tempMax: 12,
@@ -426,7 +416,7 @@
           id: '6',
           category: 'jambes',
           name: 'Salopette Thermique Gore Windstopper',
-          specs: 'Cuissard long hiver chaud doublé polaire fine avec plastron coupe-vent sur les cuisses',
+          specs: 'Cuissard long hiver chaud doublé polaire fine avec plastron coupe-vent',
           condition: 'dry',
           tempMin: -5,
           tempMax: 8,
@@ -438,11 +428,11 @@
           id: '7',
           category: 'pieds',
           name: 'Northwave Kingrock GTX',
-          specs: 'Membrane Gore-Tex Koala chaude et isolante, semelle Vibram Wolftrax, col montant élastique',
+          specs: 'Membrane Gore-Tex Koala isolante, semelle Vibram Wolftrax',
           condition: 'all',
           tempMin: -5,
           tempMax: 12,
-          decisionRule: 'Règle goulotte : toujours recouvrir le manchon avec le bas du pantalon étanche pour éviter infiltration par ruissellement.',
+          decisionRule: 'Règle goulotte : toujours recouvrir le manchon avec le bas du pantalon étanche pour éviter infiltration.',
           image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=240&q=80',
           link: 'https://www.alltricks.fr/'
         },
@@ -450,11 +440,11 @@
           id: '8',
           category: 'cou',
           name: 'Tour de Cou Buff ThermoNet (Moss Green)',
-          specs: 'Fibre Primaloft 4x plus chaude que microfibre standard, coupe tubulaire extra-fine sans bourrelet',
+          specs: 'Fibre Primaloft fine 4x plus chaude, séchage rapide, coupe tubulaire extra-fine',
           condition: 'cold',
           tempMin: -5,
           tempMax: 7,
-          decisionRule: 'Se plaque à plat sous le col fermé sans comprimer la gorge. Facile à baisser pour libérer la chaleur en côte.',
+          decisionRule: 'Se plaque à plat sous le col fermé sans comprimer la gorge. Facile à baisser pour libérer la chaleur.',
           image: 'https://images.unsplash.com/photo-1520903920243-00d872a2d1c9?auto=format&fit=crop&w=240&q=80',
           link: 'https://www.alltricks.fr/'
         },
@@ -472,7 +462,7 @@
         }
       ];
 
-      // 4. Migration & Synchronisation LocalStorage sécurisée
+      // 4. Synchronisation LocalStorage
       let gearList = [];
       try {
         const stored = localStorage.getItem('vtt_gear_list');
@@ -538,7 +528,7 @@
         }
       }
 
-      // 6. Rendu du carrousel de filtres par catégorie
+      // 6. Rendu du carrousel de filtres
       function renderCategoryFilterBar() {
         const bar = document.getElementById('category-filter-bar');
         if (!bar) return;
@@ -586,7 +576,7 @@
         if (window.lucide) lucide.createIcons();
       }
 
-      // 7. Rendu des fiches d'équipements (Vignette à gauche + Critères tactiques + Actions)
+      // 7. Rendu des fiches d'équipements
       function renderGearList() {
         const list = document.getElementById('gear-list');
         if (!list) return;
@@ -686,7 +676,7 @@
         if (window.lucide) lucide.createIcons();
       }
 
-      // 8. Gestion de la modale d'ajout / modification
+      // 8. Modale Ajout / Modification
       function openAddModal() {
         document.getElementById('modal-title').innerHTML = '<i data-lucide="plus-circle" class="w-4 h-4 text-emerald-400"></i> Ajouter un équipement';
         document.getElementById('modal-edit-id').value = '';
@@ -870,7 +860,13 @@
         }, 300);
       }
 
-      // 10. Météo Samedi & Recommandations tactiques
+      // Helper pour récupérer l'image d'un équipement par son ID
+      function getGearImg(id, fallbackCat) {
+        const item = gearList.find(g => g.id === id);
+        return (item && item.image) ? item.image : (CATEGORY_IMAGES[fallbackCat] || CATEGORY_IMAGES.buste);
+      }
+
+      // 10. Météo Samedi & Recommandations tactiques avec aperçus d'images
       async function fetchSaturdayWeather(lat, lon) {
         const nextSat = getNextSaturdayDate();
         const satIsoDate = nextSat.toISOString().split('T')[0];
@@ -946,70 +942,103 @@
         if (window.lucide) lucide.createIcons();
       }
 
-      // Recommandations tactiques dynamiques complètes (5 blocs distincts)
+      // Recommandations tactiques avec cartes illustrées
       function applyTacticalRules(temp, isWet) {
         const container = document.getElementById('recommendation-cards');
         if (!container) return;
         container.innerHTML = '';
 
         let haut = '', bas = '', pieds = '', mains = '', cou = '';
+        let imgHaut = '', imgBas = '', imgPieds = '', imgCou = '', imgMains = '';
 
         // Haut
         if (temp < 0) {
-          haut = isWet
-            ? `<strong class="text-white text-sm">Veste Endura MT500 ADV (Vert Flashy)</strong><div class="text-gray-300 text-xs mt-0.5">Superposition : Sous-couche Mérinos 200 + Seconde couche thermique</div>`
-            : `<strong class="text-white text-sm">Veste Gore Bleue (Windstopper)</strong><div class="text-gray-300 text-xs mt-0.5">Sous-couche Mérinos 200 + Seconde couche thermique</div>`;
+          if (isWet) {
+            haut = `<strong class="text-white text-sm">Veste Endura MT500 ADV (Vert Flashy)</strong><div class="text-gray-300 text-xs mt-0.5">Superposition : Sous-couche Mérinos 200 + Seconde couche thermique</div>`;
+            imgHaut = getGearImg('1', 'buste');
+          } else {
+            haut = `<strong class="text-white text-sm">Veste Gore Bleue (Windstopper)</strong><div class="text-gray-300 text-xs mt-0.5">Sous-couche Mérinos 200 + Seconde couche thermique</div>`;
+            imgHaut = getGearImg('2', 'buste');
+          }
         } else if (temp >= 0 && temp < 5) {
-          haut = isWet
-            ? `<strong class="text-white text-sm">Veste Endura MT500 ADV (Vert Flashy)</strong><div class="text-gray-300 text-xs mt-0.5">Sous-couche Mérinos 200 + Sous-couche fine d'appoint (attention à 18h)</div>`
-            : `<strong class="text-white text-sm">Veste Gore Bleue (Windstopper)</strong><div class="text-gray-300 text-xs mt-0.5">Sous-couche Mérinos 200 seule</div>`;
+          if (isWet) {
+            haut = `<strong class="text-white text-sm">Veste Endura MT500 ADV (Vert Flashy)</strong><div class="text-gray-300 text-xs mt-0.5">Sous-couche Mérinos 200 + Sous-couche fine d'appoint (attention à 18h)</div>`;
+            imgHaut = getGearImg('1', 'buste');
+          } else {
+            haut = `<strong class="text-white text-sm">Veste Gore Bleue (Windstopper)</strong><div class="text-gray-300 text-xs mt-0.5">Sous-couche Mérinos 200 seule</div>`;
+            imgHaut = getGearImg('2', 'buste');
+          }
         } else if (temp >= 5 && temp <= 10) {
-          haut = isWet
-            ? (temp >= 8
-                ? `<strong class="text-white text-sm">Veste Endura MT500 ADV (Vert Flashy)</strong><div class="text-amber-300 text-xs mt-0.5 font-medium">⚠️ Risque de surchauffe : Choisir une première couche synthétique aérée plutôt que le mérinos 200.</div>`
-                : `<strong class="text-white text-sm">Veste Endura MT500 ADV (Vert Flashy)</strong><div class="text-gray-300 text-xs mt-0.5">Sous-couche Mérinos 200 seule au contact direct de la peau</div>`)
-            : `<strong class="text-white text-sm">Veste Gore Bleue (Windstopper)</strong><div class="text-gray-300 text-xs mt-0.5">Sous-couche fine (Mérinos léger ou synthétique respirant)</div>`;
+          if (isWet) {
+            if (temp >= 8) {
+              haut = `<strong class="text-white text-sm">Veste Endura MT500 ADV (Vert Flashy)</strong><div class="text-amber-300 text-xs mt-0.5 font-medium">⚠️ Risque de surchauffe : Choisir une première couche synthétique aérée plutôt que le mérinos 200.</div>`;
+            } else {
+              haut = `<strong class="text-white text-sm">Veste Endura MT500 ADV (Vert Flashy)</strong><div class="text-gray-300 text-xs mt-0.5">Sous-couche Mérinos 200 seule au contact direct de la peau</div>`;
+            }
+            imgHaut = getGearImg('1', 'buste');
+          } else {
+            haut = `<strong class="text-white text-sm">Veste Gore Bleue (Windstopper)</strong><div class="text-gray-300 text-xs mt-0.5">Sous-couche fine (Mérinos léger ou synthétique respirant)</div>`;
+            imgHaut = getGearImg('2', 'buste');
+          }
         } else {
-          haut = isWet
-            ? `<strong class="text-white text-sm">Veste Endura MT500 ADV</strong><div class="text-gray-300 text-xs mt-0.5">T-shirt technique ultra-aéré (ventilation latérale grande ouverte)</div>`
-            : `<strong class="text-white text-sm">Maillot manches longues mi-saison léger</strong><div class="text-gray-300 text-xs mt-0.5">Sous-couche filet été (Pas de hardshell)</div>`;
+          if (isWet) {
+            haut = `<strong class="text-white text-sm">Veste Endura MT500 ADV</strong><div class="text-gray-300 text-xs mt-0.5">T-shirt technique ultra-aéré (ventilation latérale grande ouverte)</div>`;
+            imgHaut = getGearImg('1', 'buste');
+          } else {
+            haut = `<strong class="text-white text-sm">Maillot manches longues mi-saison léger</strong><div class="text-gray-300 text-xs mt-0.5">Sous-couche filet été (Pas de hardshell)</div>`;
+            imgHaut = getGearImg('4', 'buste');
+          }
         }
 
         // Bas
-        bas = isWet
-          ? `<strong class="text-white text-sm">Pantalon / Salopette Endura MT500 Waterproof II</strong><div class="text-gray-300 text-xs mt-0.5">Cuissard court en dessous si > 5°C, ou collant fin si grand froid</div>`
-          : `<strong class="text-white text-sm">Salopette Thermique Gore Hiver</strong><div class="text-gray-300 text-xs mt-0.5">Protection coupe-vent et respirabilité maximale</div>`;
+        if (isWet) {
+          bas = `<strong class="text-white text-sm">Pantalon / Salopette Endura MT500 Waterproof II</strong><div class="text-gray-300 text-xs mt-0.5">Cuissard court en dessous si > 5°C, ou collant fin si grand froid</div>`;
+          imgBas = getGearImg('5', 'jambes');
+        } else {
+          bas = `<strong class="text-white text-sm">Salopette Thermique Gore Hiver</strong><div class="text-gray-300 text-xs mt-0.5">Protection coupe-vent et respirabilité maximale</div>`;
+          imgBas = getGearImg('6', 'jambes');
+        }
 
         // Pieds
         pieds = `<strong class="text-white text-sm">Northwave Kingrock GTX</strong><div class="text-emerald-400 text-xs mt-0.5 font-semibold">⚠️ Règle impérative : Bas du pantalon verrouillé PAR-DESSUS le manchon néoprène (effet goulotte étanche).</div>`;
+        imgPieds = getGearImg('7', 'pieds');
 
         // Cou & Tête
-        cou = temp <= 7
-          ? `<strong class="text-white text-sm">Tour de Cou Buff ThermoNet (Moss Green)</strong><div class="text-gray-300 text-xs mt-0.5">À plat sous le col zippé + bandeau ou bonnet sous-casque thermique</div>`
-          : `<strong class="text-white text-sm">Tour de Cou fin ou Buff replié bas</strong><div class="text-gray-300 text-xs mt-0.5">Dégager la gorge lors des ascensions pour évacuer la chaleur</div>`;
+        if (temp <= 7) {
+          cou = `<strong class="text-white text-sm">Tour de Cou Buff ThermoNet (Moss Green)</strong><div class="text-gray-300 text-xs mt-0.5">À plat sous le col zippé + bandeau ou bonnet sous-casque thermique</div>`;
+        } else {
+          cou = `<strong class="text-white text-sm">Tour de Cou fin ou Buff replié bas</strong><div class="text-gray-300 text-xs mt-0.5">Dégager la gorge lors des ascensions pour évacuer la chaleur</div>`;
+        }
+        imgCou = getGearImg('8', 'cou');
 
         // Mains
-        mains = temp < 5
-          ? `<strong class="text-white text-sm">Gants Hiver Grand Froid Déperlants</strong><div class="text-gray-300 text-xs mt-0.5">Protection renforcée pour la tombée de la nuit (18h-19h)</div>`
-          : `<strong class="text-white text-sm">Gants Mi-Saison Coupe-Vent Souples</strong><div class="text-gray-300 text-xs mt-0.5">Précision des leviers et respirabilité</div>`;
+        if (temp < 5) {
+          mains = `<strong class="text-white text-sm">Gants Hiver Grand Froid Déperlants</strong><div class="text-gray-300 text-xs mt-0.5">Protection renforcée pour la tombée de la nuit (18h-19h)</div>`;
+        } else {
+          mains = `<strong class="text-white text-sm">Gants Mi-Saison Coupe-Vent Souples</strong><div class="text-gray-300 text-xs mt-0.5">Précision des leviers et respirabilité</div>`;
+        }
+        imgMains = getGearImg('9', 'mains');
 
         const cardsData = [
-          { icon: 'shield', title: 'Buste & Superposition', content: haut, border: 'border-emerald-500/50' },
-          { icon: 'compass', title: 'Bas du Corps', content: bas, border: 'border-blue-500/50' },
-          { icon: 'footprints', title: 'Pieds & Étanchéité', content: pieds, border: 'border-amber-500/50' },
-          { icon: 'smile', title: 'Cou & Tête', content: cou, border: 'border-purple-500/50' },
-          { icon: 'hand', title: 'Mains', content: mains, border: 'border-gray-700' }
+          { icon: 'shield', title: 'Buste & Superposition', content: haut, image: imgHaut, border: 'border-emerald-500/50' },
+          { icon: 'compass', title: 'Bas du Corps', content: bas, image: imgBas, border: 'border-blue-500/50' },
+          { icon: 'footprints', title: 'Pieds & Étanchéité', content: pieds, image: imgPieds, border: 'border-amber-500/50' },
+          { icon: 'smile', title: 'Cou & Tête', content: cou, image: imgCou, border: 'border-purple-500/50' },
+          { icon: 'hand', title: 'Mains', content: mains, image: imgMains, border: 'border-gray-700' }
         ];
 
         cardsData.forEach(c => {
           const el = document.createElement('div');
-          el.className = `p-4 rounded-xl bg-gray-900/95 border ${c.border} flex items-start gap-3.5 shadow-md`;
+          el.className = `p-3.5 rounded-2xl bg-gray-900/95 border ${c.border} flex items-center gap-3.5 shadow-md`;
           el.innerHTML = `
-            <div class="p-2.5 rounded-lg bg-gray-800 text-emerald-400 shrink-0 mt-0.5">
-              <i data-lucide="${c.icon}" class="w-5 h-5"></i>
+            <div class="w-14 h-14 sm:w-16 sm:h-16 shrink-0 rounded-xl overflow-hidden bg-gray-950 border border-gray-800 shadow-inner">
+              <img src="${c.image}" class="w-full h-full object-cover object-center" onerror="this.src='${CATEGORY_IMAGES.buste}'">
             </div>
-            <div class="text-sm leading-relaxed text-gray-200">
-              <div class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">${c.title}</div>
+            <div class="flex-1 min-w-0 text-sm leading-relaxed text-gray-200">
+              <div class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-0.5 flex items-center gap-1.5">
+                <i data-lucide="${c.icon}" class="w-3.5 h-3.5 text-emerald-400"></i>
+                ${c.title}
+              </div>
               ${c.content}
             </div>
           `;
