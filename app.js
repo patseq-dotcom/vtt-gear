@@ -3,7 +3,7 @@
 // ==========================================
 const SUPABASE_URL = 'https://fmyveoyqpctpwbxyeaaa.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_ODuC6_JDCK0D422peyablg_0oTnivYV';
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ==========================================
 // 2. RÉFÉRENCES DU DOM
@@ -44,7 +44,7 @@ function clearMessage() {
 // ==========================================
 async function fetchUserProfile(user) {
   try {
-    const { data, error } = await supabaseClient
+    const { data, error } = await supabase
       .from('profils')
       .select('cold_sensitivity')
       .eq('id', user.id)
@@ -62,7 +62,7 @@ async function fetchUserProfile(user) {
 async function loadGearItems(userId) {
   gearList.innerHTML = '<li style="color: #888;">Chargement des équipements...</li>';
   
-  const { data, error } = await supabaseClient
+  const { data, error } = await supabase
     .from('gear_items')
     .select('*')
     .eq('user_id', userId)
@@ -96,7 +96,7 @@ async function loadGearItems(userId) {
 // ==========================================
 // 5. GESTION DU CYCLE D'AUTHENTIFICATION
 // ==========================================
-supabaseClient.auth.onAuthStateChange(async (event, session) => {
+supabase.auth.onAuthStateChange(async (event, session) => {
   if (session && session.user) {
     currentUser = session.user;
     userStatusText.textContent = session.user.email;
@@ -127,7 +127,7 @@ btnLogin.addEventListener('click', async () => {
     return;
   }
 
-  const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) displayMessage(error.message, true);
 });
 
@@ -142,7 +142,7 @@ btnSignup.addEventListener('click', async () => {
     return;
   }
 
-  const { error } = await supabaseClient.auth.signUp({ email, password });
+  const { error } = await supabase.auth.signUp({ email, password });
   if (error) {
     displayMessage(error.message, true);
   } else {
@@ -152,7 +152,7 @@ btnSignup.addEventListener('click', async () => {
 
 // Déconnexion
 btnLogout.addEventListener('click', async () => {
-  await supabaseClient.auth.signOut();
+  await supabase.auth.signOut();
 });
 
 // Ajout d'équipement
@@ -163,7 +163,7 @@ addGearForm.addEventListener('submit', async (e) => {
   const name = gearNameInput.value.trim();
   const category = gearCategoryInput.value;
 
-  const { error } = await supabaseClient.from('gear_items').insert([
+  const { error } = await supabase.from('gear_items').insert([
     { user_id: currentUser.id, name, category }
   ]);
 
