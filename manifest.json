@@ -1,24 +1,21 @@
 {
-  "name": "VTT Weather & Gear Assistant",
-  "short_name": "VTT Gear",
-  "description": "Assistant météo et recommandation de tenue VTT pour le samedi",
+  "name": "VTT Outfit Advisor",
+  "short_name": "VTT Outfit",
+  "description": "Recommandation dynamique de tenue VTT selon la météo et l'inventaire personnel",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#090d16",
-  "theme_color": "#10b981",
-  "orientation": "portrait",
+  "background_color": "#f7f9fa",
+  "theme_color": "#0070f3",
   "icons": [
     {
       "src": "icon-192.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     },
     {
       "src": "icon-512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
   ]
 }

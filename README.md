@@ -1,15 +1,19 @@
-# VTT Weather & Gear Assistant (PWA v3.2-AI)
+# VTT Outfit Advisor - PWA Supabase
 
-## Nouveautés :
-1. **Édition complète des fiches d'équipements** :
-   - Bouton de modification (icône crayon) sur chaque carte.
-   - Enregistrement immédiat dans le `localStorage` de votre téléphone.
-2. **Critères de décision tactiques intégrés** :
-   - Plage thermique minimale et maximale (°C).
-   - Condition météo cible (Pluie/Boue, Sec/Windstopper, Grand Froid, Doux).
-   - Règles d'arbitrage explicites (ex: seuil des 8°C anti-surchauffe, règle de goulotte étanche pour les chaussures).
-3. **Moteur d'extraction IA & Auto-complétion** :
-   - Champ d'auto-remplissage par nom de modèle, référence commerciale ou URL de fiche produit.
-   - Pré-remplit automatiquement la catégorie, les spécifications, les températures cibles et les consignes tactiques.
-4. **Service Worker v5** :
-   - Purge automatique de l'ancien cache pour un rafraîchissement immédiat sur smartphone.
+Package complet de l'application PWA avec persistance PostgreSQL et authentification sécurisée.
+
+## Contenu de l'archive
+- `index.html` : Interface principale (auth, météo, tenue et inventaire)
+- `style.css` : Feuilles de styles responsive et épurées
+- `app.js` : Client Supabase v2 configuré avec vos identifiants réels
+- `sw.js` : Service Worker pour le fonctionnement hors-ligne (PWA)
+- `manifest.json` : Manifeste PWA pour installation sur smartphone / bureau
+- `setup_database.sql` : Script SQL complet à exécuter dans le SQL Editor Supabase
+
+## Lancement
+1. Ouvrez `setup_database.sql` dans le SQL Editor de Supabase pour vous assurer que les tables `profiles` et `gear_items` sont en place.
+2. Déployez les fichiers statiques ou lancez un serveur local :
+   ```bash
+   python -m http.server 8000
+   ```
+3. Ouvrez `http://localhost:8000` dans votre navigateur.
