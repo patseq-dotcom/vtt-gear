@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VTT Weather & Gear Assistant</title>
+  
+  <!-- Favicon pour l'onglet du navigateur -->
+  <link rel="icon" type="image/png" href="./icon-192.png">
+  
+  <meta name="theme-color" content="#10b981">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="VTT Gear">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+
+  <!-- Tailwind CSS, Lucide Icons & Supabase SDK -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              400: '#34d399',
+              500: '#10b981',
+              600: '#059669',
+              900: '#064e3b',
+            },
+            dark: {
+              bg: '#090d16',
+              card: '#111827',
+              border: '#1f2937'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #090d16; color: #f3f4f6; }
+    .custom-scroll::-webkit-scrollbar { height: 4px; width: 4px; }
+    .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans text-base pb-24 selection:bg-emerald-500 selection:text-white">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-50 bg-[#090d16]/95 backdrop-blur-md border-b border-gray-800 px-4 py-3.5 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="p-2.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400">
+        <i data-lucide="bike" class="w-6 h-6"></i>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-base font-bold tracking-tight text-white">VTT Weather & Gear</h1>
+          <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">v3.3-AI</span>
+        </div>
+        <p class="text-xs text-gray-300 font-medium" id="current-target-date">Calcul météo samedi...</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <button onclick="detectUserLocation()" id="btn-gps" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs font-semibold border border-gray-700 transition-colors shadow-sm">
+        <i data-lucide="map-pin" class="w-4 h-4 text-emerald-400"></i>
+        <span id="gps-label">Localiser</span>
+      </button>
+      <button onclick="toggleAuthModal()" id="btn-auth-header" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs font-semibold border border-gray-700 transition-colors shadow-sm">
+        <span id="cloud-indicator" class="w-2 h-2 rounded-full bg-gray-500"></span>
+        <i data-lucide="cloud" class="w-4 h-4 text-emerald-400"></i>
+        <span id="auth-label">Compte</span>
+      </button>
+      <button onclick="toggleTab('gear')" id="btn-tab-gear" class="p-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition-colors" title="Mon Équipement">
+        <i data-lucide="shield" class="w-5 h-5"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-2xl w-full mx-auto p-4 space-y-5">
+
+    <!-- Vue: Météo & Recommandation Tenue -->
+    <section id="view-dashboard" class="space-y-4">
+      
+      <!-- Weather Summary Card -->
+      <div class="p-5 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-900/90 border border-gray-800 shadow-xl relative overflow-hidden">
+        <div class="absolute -right-8 -bottom-8 w-36 h-36 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+        <div class="mb-3 pb-3 border-b border-gray-800/80 flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2 text-xs font-bold text-emerald-400 uppercase tracking-wider">
+            <i data-lucide="calendar" class="w-4 h-4"></i>
+            <span id="forecast-card-title">Samedi Prochain (Plage 13h45 - 19h)</span>
+          </div>
+          <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-800/80 border border-gray-700 text-xs text-gray-200 font-medium">
+            <i data-lucide="map-pin" class="w-3.5 h-3.5 text-emerald-400 shrink-0"></i>
+            <span class="text-gray-400">Lieu :</span>
+            <span id="spot-location-name" class="text-emerald-300 font-semibold">Vallée de Chevreuse</span>
+          </div>
+        </div>
+
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="flex items-baseline gap-2.5">
+              <span class="text-4xl md:text-5xl font-extrabold tracking-tight text-white" id="temp-display">--°C</span>
+              <span class="text-sm font-medium text-gray-300" id="feels-display">Ressenti --°C</span>
+            </div>
+            <div class="text-sm text-gray-200 mt-2 flex items-center gap-2 font-medium" id="desc-display">
+              <i data-lucide="loader-2" class="w-4 h-4 animate-spin text-emerald-400"></i> Analyse météo...
+            </div>
+          </div>
+          <div class="text-right space-y-1.5">
+            <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-800 border border-gray-700 text-xs font-semibold text-gray-200" id="rain-display">
+              <i data-lucide="cloud-rain" class="w-4 h-4 text-blue-400"></i>
+              <span>-- mm</span>
+            </div>
+            <div class="block text-xs font-medium text-gray-300" id="wind-display">Vent: -- km/h</div>
+          </div>
+        </div>
+
+        <!-- Heure par heure 14h - 19h -->
+        <div class="mt-4 pt-3.5 border-t border-gray-800">
+          <div class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2 flex items-center gap-1.5">
+            <i data-lucide="clock" class="w-3.5 h-3.5 text-emerald-400"></i>
+            Évolution heure par heure (14h - 19h)
+          </div>
+          <div id="hourly-forecast-row" class="grid grid-cols-6 gap-1.5 text-center overflow-x-auto pb-1 custom-scroll">
+            <div class="p-2 rounded-lg bg-gray-800/50 text-[11px] text-gray-400">14h<br>--</div>
+            <div class="p-2 rounded-lg bg-gray-800/50 text-[11px] text-gray-400">15h<br>--</div>
+            <div class="p-2 rounded-lg bg-gray-800/50 text-[11px] text-gray-400">16h<br>--</div>
+            <div class="p-2 rounded-lg bg-gray-800/50 text-[11px] text-gray-400">17h<br>--</div>
+            <div class="p-2 rounded-lg bg-gray-800/50 text-[11px] text-gray-400">18h<br>--</div>
+            <div class="p-2 rounded-lg bg-gray-800/50 text-[11px] text-gray-400">19h<br>--</div>
+          </div>
+        </div>
+
+        <div class="mt-4 pt-3.5 border-t border-gray-800 flex items-center justify-between text-xs text-gray-300">
+          <span class="flex items-center gap-1.5 font-medium">
+            <i data-lucide="sliders" class="w-4 h-4 text-emerald-400"></i> Mode Simulateur
+          </span>
+          <button onclick="toggleSimulator()" class="text-emerald-400 font-semibold hover:underline">Ajuster T° / Humidité</button>
+        </div>
+
+        <div id="sim-panel" class="hidden mt-3.5 pt-3.5 border-t border-gray-800/80 space-y-3">
+          <div class="grid grid-cols-2 gap-3.5">
+            <div>
+              <label class="text-xs text-gray-300 font-medium block mb-1">Température : <span id="sim-temp-val" class="text-white font-bold text-sm">5°C</span></label>
+              <input type="range" min="-5" max="15" value="5" step="1" id="sim-temp" oninput="runSimulation()" class="w-full h-2 bg-gray-700 rounded-lg accent-emerald-500 cursor-pointer">
+            </div>
+            <div>
+              <label class="text-xs text-gray-300 font-medium block mb-1">État du terrain</label>
+              <select id="sim-condition" onchange="runSimulation()" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-2.5 py-1.5 text-xs text-white">
+                <option value="dry">Sec / Gelé</option>
+                <option value="wet" selected>Pluie / Terrain Boueux</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recommandation Tenue avec fiches séparées par couche -->
+      <div class="space-y-3.5">
+        <h2 class="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-2 px-1">
+          <i data-lucide="sparkles" class="w-4 h-4 text-emerald-400"></i>
+          Tenue Recommandée pour Samedi (13h45 - 19h)
+        </h2>
+        <div class="grid gap-3" id="recommendation-cards"></div>
+      </div>
+
+    </section>
+
+    <!-- Vue: Inventaire Matériel -->
+    <section id="view-gear" class="hidden space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-base font-bold text-white flex items-center gap-2">
+            <i data-lucide="package" class="w-5 h-5 text-emerald-400"></i>
+            Garage & Fiches Matériel
+          </h2>
+          <p class="text-xs text-gray-400">Inventaire dynamique et critères d'activation</p>
+        </div>
+        <button onclick="openNewGearModal()" class="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold shadow transition">
+          <i data-lucide="plus" class="w-4 h-4"></i> Ajouter
+        </button>
+      </div>
+
+      <div id="gear-list" class="space-y-3"></div>
+    </section>
+
+  </main>
+
+  <!-- Modale d'ajout/édition avec parseur web & upload image -->
+  <div id="gear-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 overflow-y-auto">
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl max-w-lg w-full p-5 space-y-4 shadow-2xl my-6 max-h-[90vh] overflow-y-auto custom-scroll">
+      
+      <div class="flex items-center justify-between pb-3 border-b border-gray-800">
+        <h3 id="modal-title" class="text-sm font-bold text-white flex items-center gap-2">
+          <i data-lucide="tag" class="w-4 h-4 text-emerald-400"></i> Fiche équipement
+        </h3>
+        <button onclick="toggleAddGearModal()" class="text-gray-400 hover:text-white p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Module d'analyse Web / Référence IA -->
+      <div class="p-3.5 rounded-xl bg-gradient-to-r from-emerald-950/40 to-slate-900 border border-emerald-500/30 space-y-2">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-bold text-emerald-300 flex items-center gap-1.5">
+            <i data-lucide="bot" class="w-4 h-4 text-emerald-400"></i>
+            Extraction Web & IA
+          </label>
+          <span class="text-[10px] text-gray-400">URL Alltricks/Endura ou nom du modèle</span>
+        </div>
+        <div class="flex gap-2">
+          <input type="text" id="ai-input" placeholder="Collez l'URL de la page produit ou le nom..." class="flex-1 bg-gray-800/90 border border-gray-700 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500">
+          <button type="button" onclick="autoFillWithAI()" id="btn-ai-fetch" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Lire la page
+          </button>
+        </div>
+        <p id="ai-feedback" class="text-[11px] text-gray-400 hidden"></p>
+      </div>
+
+      <input type="hidden" id="modal-edit-id" value="">
+
+      <div class="space-y-3 text-xs">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-gray-300 font-semibold mb-1">Catégorie</label>
+            <select id="modal-category" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-white">
+              <option value="veste">Veste (Couche externe)</option>
+              <option value="sous_couche_1">Sous-couche 1 (Contact peau)</option>
+              <option value="sous_couche_2">Sous-couche 2 (Intermédiaire thermique)</option>
+              <option value="jambes">Jambes (Pantalon / Cuissard)</option>
+              <option value="pieds">Pieds (Chaussures / Chaussettes)</option>
+              <option value="mains">Mains (Gants)</option>
+              <option value="cou">Cou & Tête (Buff / Bonnet)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-gray-300 font-semibold mb-1">Condition météo cible</label>
+            <select id="modal-condition" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-white">
+              <option value="all">Toutes conditions</option>
+              <option value="wet">Pluie / Boue (Imperméable)</option>
+              <option value="dry">Sec / Coupe-vent (Respirant)</option>
+              <option value="cold">Grand froid (&lt; 5°C)</option>
+              <option value="mild">Frais modéré (5°C à 15°C)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-gray-300 font-semibold mb-1">Nom du modèle</label>
+          <input type="text" id="modal-name" placeholder="ex: Veste Endura MT500 ADV Vert Flashy" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-white font-medium">
+        </div>
+
+        <div>
+          <label class="block text-gray-300 font-semibold mb-1">Caractéristiques techniques (Membrane, Tissu)</label>
+          <input type="text" id="modal-specs" placeholder="ex: ExoShell40DR, 20k étanche, aérations zippées" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-white">
+        </div>
+
+        <!-- Critères d'activation -->
+        <div class="p-3 bg-gray-800/60 rounded-xl border border-gray-700 space-y-2.5">
+          <div class="font-bold text-emerald-400 flex items-center gap-1.5 text-xs">
+            <i data-lucide="target" class="w-4 h-4"></i>
+            Plages d'arbitrage tactique
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-gray-400 text-[11px] mb-1">T° Min (°C)</label>
+              <input type="number" id="modal-temp-min" value="-5" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-2.5 py-1.5 text-white">
+            </div>
+            <div>
+              <label class="block text-gray-400 text-[11px] mb-1">T° Max (°C)</label>
+              <input type="number" id="modal-temp-max" value="10" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-2.5 py-1.5 text-white">
+            </div>
+          </div>
+          <div>
+            <label class="block text-gray-400 text-[11px] mb-1">Règle de décision</label>
+            <textarea id="modal-decision" rows="2" placeholder="ex: Ne porter qu'avec première couche fine si > 8°C." class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white text-xs"></textarea>
+          </div>
+        </div>
+
+        <!-- Photo & Image du produit -->
+        <div>
+          <label class="block text-gray-300 font-semibold mb-1 flex items-center justify-between">
+            <span>Visuel / Photo du produit</span>
+            <span class="text-[10px] text-gray-400">URL web ou fichier photo</span>
+          </label>
+          <div class="flex items-center gap-2">
+            <input type="url" id="modal-image" placeholder="https://.../photo.jpg" oninput="previewModalImage(this.value)" class="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-white text-xs">
+            <label class="cursor-pointer px-3 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-200 text-xs font-semibold rounded-xl flex items-center gap-1 shrink-0">
+              <i data-lucide="camera" class="w-3.5 h-3.5 text-emerald-400"></i>
+              <span>Photo</span>
+              <input type="file" id="modal-image-file" accept="image/*" class="hidden" onchange="handleImageFileUpload(event)">
+            </label>
+          </div>
+          <div id="modal-image-preview-container" class="mt-2 hidden">
+            <img id="modal-image-preview" src="" alt="Aperçu" class="w-16 h-16 object-cover rounded-xl border border-gray-700 shadow">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-gray-300 font-semibold mb-1">Lien de la page produit</label>
+          <input type="url" id="modal-link" placeholder="https://www.alltricks.fr/..." class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-white">
+        </div>
+      </div>
+
+      <div class="flex gap-2.5 pt-2">
+        <button onclick="toggleAddGearModal()" class="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium rounded-xl text-xs transition">Annuler</button>
+        <button onclick="saveGear()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-xs transition">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="fixed bottom-0 inset-x-0 bg-gray-900/95 backdrop-blur-md border-t border-gray-800 py-2.5 px-6 flex justify-around text-xs">
+    <button onclick="toggleTab('dashboard')" id="nav-btn-dashboard" class="flex flex-col items-center gap-1 text-emerald-400 font-semibold">
+      <i data-lucide="cloud-sun" class="w-5 h-5"></i>
+      <span>Météo & Tenue</span>
+    </button>
+    <button onclick="toggleTab('gear')" id="nav-btn-gear" class="flex flex-col items-center gap-1 text-gray-400 hover:text-white font-medium">
+      <i data-lucide="shield" class="w-5 h-5"></i>
+      <span>Mon Matériel</span>
+    </button>
+  </nav>
+
+  <!-- Modale Authentification & Synchro Cloud -->
+  <div id="auth-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3">
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-gray-800">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <i data-lucide="cloud" class="w-4 h-4 text-emerald-400"></i>
+          Synchronisation Supabase Cloud
+        </h3>
+        <button onclick="toggleAuthModal()" class="text-gray-400 hover:text-white p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div id="auth-view-logged-out" class="space-y-3">
+        <p class="text-xs text-gray-300">Connectez-vous pour synchroniser votre inventaire sur vos différents écrans.</p>
+        <div>
+          <label class="text-xs text-gray-400 block mb-1">Email</label>
+          <input type="email" id="auth-input-email" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-xs text-white" placeholder="patrice.seque@gmail.com">
+        </div>
+        <div>
+          <label class="text-xs text-gray-400 block mb-1">Mot de passe</label>
+          <input type="password" id="auth-input-pwd" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-xs text-white" placeholder="••••••••">
+        </div>
+        <div class="flex gap-2 pt-1">
+          <button type="button" onclick="handleAuthLogin()" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-xl transition">Se connecter</button>
+          <button type="button" onclick="handleAuthSignup()" class="flex-1 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold text-xs rounded-xl border border-gray-700 transition">Créer compte</button>
+        </div>
+        <p id="auth-modal-msg" class="text-[11px] text-center hidden p-2 rounded-lg"></p>
+      </div>
+
+      <div id="auth-view-logged-in" class="hidden space-y-3">
+        <div class="p-3 bg-gray-800/60 border border-gray-700/80 rounded-xl space-y-1">
+          <p class="text-[11px] text-gray-400 font-medium">Session active :</p>
+          <p class="text-xs font-bold text-emerald-400 truncate" id="auth-user-email">--</p>
+          <div class="flex items-center gap-1.5 text-[10px] text-gray-400 mt-1">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span>Synchronisation Cloud active</span>
+          </div>
+        </div>
+
+        <div>
+          <label class="text-xs text-gray-300 font-medium block mb-1">Sensibilité thermique</label>
+          <select id="user-sensitivity-select" onchange="updateColdSensitivity(this.value)" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-xs text-white">
+            <option value="warm">Frilleux (+2°C ressenti)</option>
+            <option value="neutral" selected>Neutre / Standard</option>
+            <option value="cold">Résistant au grand froid (-2°C ressenti)</option>
+          </select>
+        </div>
+
+        <div class="flex gap-2 pt-2">
+          <button type="button" onclick="manualSync()" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-xl flex items-center justify-center gap-1.5 transition">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Synchro manuelle
+          </button>
+          <button type="button" onclick="handleAuthLogout()" class="py-2 px-3 bg-red-950/60 hover:bg-red-900/60 text-red-300 border border-red-800 text-xs rounded-xl transition">
+            Déconnexion
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. SUPABASE CLIENT
+    // =========================================================================
+    const SUPABASE_URL = 'https://fmyveoyqpctpwbxyeaaa.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_ODuC6_JDCK0D422peyablg_0oTnivYV';
+    const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
+    let currentUser = null;
+    let userSensitivity = 'neutral';
+
+    // Initialisation sécurisée des icônes Lucide
+    function safeLucide() {
+      try {
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+          window.lucide.createIcons();
+        }
+      } catch (err) {
+        console.warn('Lucide soft warning:', err);
+      }
+    }
+
+    // Dotation matérielle initiale avec séparation des couches du buste
+    const DEFAULT_GEAR = [
+      {
+        id: '1',
+        category: 'veste',
+        name: 'Veste Endura MT500 ADV (Vert Flashy)',
+        specs: 'Membrane Pertex Shield 3L, imperméabilité 20 000 mm, zips d aération',
+        condition: 'wet',
+        tempMin: -5,
+        tempMax: 12,
+        decisionRule: 'Couche externe étanche indispensable dès pluie ou projections de boue.',
+        link: 'https://www.endurasport.com/',
+        image: 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=300&auto=format&fit=crop&q=60'
+      },
+      {
+        id: '2',
+        category: 'veste',
+        name: 'Veste Gore Power Active Bleue',
+        specs: 'Membrane Gore Windstopper coupe-vent 100%, respirabilité maximale',
+        condition: 'dry',
+        tempMin: -5,
+        tempMax: 10,
+        decisionRule: 'Privilégier par temps sec ou froid vif pour éviter toute surchauffe.',
+        link: '',
+        image: ''
+      },
+      {
+        id: '3',
+        category: 'sous_couche_1',
+        name: 'Sous-couche Icebreaker 200 Oasis',
+        specs: '100% Laine Mérinos 200 g/m², chaleur constante même mouillé',
+        condition: 'cold',
+        tempMin: -5,
+        tempMax: 7,
+        decisionRule: 'Première couche peau idéale de -5°C à 7°C. Éviter au-dessus de 8°C sous veste étanche.',
+        link: '',
+        image: ''
+      },
+      {
+        id: '4',
+        category: 'sous_couche_1',
+        name: 'Sous-couche Synthétique Aérée',
+        specs: 'Mesh gaufré ultra-respirant à séchage rapide',
+        condition: 'mild',
+        tempMin: 8,
+        tempMax: 15,
+        decisionRule: 'Substitut au mérinos au contact de la peau dès que la température dépasse 8°C.',
+        link: '',
+        image: ''
+      },
+      {
+        id: '5',
+        category: 'sous_couche_2',
+        name: 'Couche Intermédiaire Polaire Fine / Maillot Thermique',
+        specs: 'Maillot manches longues micro-polaire respirant pour isolation d appoint',
+        condition: 'cold',
+        tempMin: -5,
+        tempMax: 4,
+        decisionRule: 'Intercalée entre le mérinos et la veste dès que le ressenti passe sous 5°C.',
+        link: '',
+        image: ''
+      },
+      {
+        id: '6',
+        category: 'jambes',
+        name: 'Pantalon Endura MT500 Waterproof II',
+        specs: 'ExoShell40DR 3 couches étanche, fessier renforcé cordura',
+        condition: 'wet',
+        tempMin: -5,
+        tempMax: 12,
+        decisionRule: 'Indispensable terrain détrempé. Verrouiller le bas par-dessus la chaussure.',
+        link: 'https://www.endurasport.com/',
+        image: ''
+      },
+      {
+        id: '7',
+        category: 'jambes',
+        name: 'Salopette Thermique Gore Windstopper',
+        specs: 'Cuissard long doublé polaire fine avec plastron coupe-vent',
+        condition: 'dry',
+        tempMin: -5,
+        tempMax: 8,
+        decisionRule: 'Premier choix par sol sec et froid. Évacuation rapide de la transpiration.',
+        link: '',
+        image: ''
+      },
+      {
+        id: '8',
+        category: 'pieds',
+        name: 'Northwave Kingrock GTX',
+        specs: 'Membrane Gore-Tex Koala, semelle Vibram Wolftrax, manchon montant élastique',
+        condition: 'all',
+        tempMin: -5,
+        tempMax: 12,
+        decisionRule: 'Règle goulotte : toujours recouvrir le manchon avec le pantalon étanche contre le ruissellement.',
+        link: 'https://www.alltricks.fr/',
+        image: ''
+      },
+      {
+        id: '9',
+        category: 'cou',
+        name: 'Tour de Cou Buff ThermoNet (Moss Green)',
+        specs: 'Fibre Primaloft 4x plus chaude, coupe tubulaire fine sans bourrelet',
+        condition: 'cold',
+        tempMin: -5,
+        tempMax: 7,
+        decisionRule: 'Plaqué à plat sous le col fermé par grand froid. Facile à abaisser en côte.',
+        link: 'https://www.alltricks.fr/',
+        image: ''
+      },
+      {
+        id: '10',
+        category: 'mains',
+        name: 'Gants Giro H2O Néoprène',
+        specs: 'Néoprène 2mm isolant thermique humide, grip siliconé paume',
+        condition: 'wet',
+        tempMin: 0,
+        tempMax: 10,
+        decisionRule: 'Priorité absolue sous pluie ou terrain boueux entre 0°C et 10°C.',
+        link: '',
+        image: ''
+      },
+      {
+        id: '11',
+        category: 'mains',
+        name: 'Gants Hiver Grand Froid Déperlants',
+        specs: 'Paume coupe-vent antidérapante, intérieur micropolaire respirant',
+        condition: 'cold',
+        tempMin: -5,
+        tempMax: 6,
+        decisionRule: 'Activer par temps froid sec sous 6°C.',
+        link: '',
+        image: ''
+      }
+    ];
+
+    let gearList = JSON.parse(localStorage.getItem('vtt_gear_list')) || DEFAULT_GEAR;
+
+    // Coordonnées par défaut : Vallée de Chevreuse
+    let currentCoords = {
+      lat: 48.7778,
+      lon: 2.0514,
+      name: "Vallée de Chevreuse"
+    };
+
+    // Calcul précis du samedi cible
+    function getNextSaturdayDate() {
+      const now = new Date();
+      const day = now.getDay();
+      let diff = (6 - day + 7) % 7;
+      if (diff === 0 && now.getHours() >= 19) {
+        diff = 7;
+      }
+      const saturday = new Date(now);
+      saturday.setDate(now.getDate() + diff);
+      return saturday;
+    }
+
+    // Géolocalisation corrigée sans blocage CORS
+    function detectUserLocation() {
+      const label = document.getElementById('gps-label');
+      const spotNameEl = document.getElementById('spot-location-name');
+      if (!navigator.geolocation) {
+        alert("La géolocalisation n'est pas supportée.");
+        return;
+      }
+      label.textContent = "Recherche...";
+
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          currentCoords.lat = pos.coords.latitude;
+          currentCoords.lon = pos.coords.longitude;
+          try {
+            const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${currentCoords.lat}&longitude=${currentCoords.lon}&localityLanguage=fr`);
+            const data = await res.json();
+            if (data && (data.locality || data.city)) {
+              const city = data.locality || data.city;
+              const dept = data.principalSubdivision || '';
+              currentCoords.name = `${city} (${dept})`;
+            } else {
+              currentCoords.name = `GPS (${currentCoords.lat.toFixed(2)}°, ${currentCoords.lon.toFixed(2)}°)`;
+            }
+          } catch(e) {
+            currentCoords.name = `GPS (${currentCoords.lat.toFixed(2)}°, ${currentCoords.lon.toFixed(2)}°)`;
+          }
+          label.textContent = "Actualisé";
+          spotNameEl.textContent = currentCoords.name;
+          localStorage.setItem('vtt_coords', JSON.stringify(currentCoords));
+          fetchSaturdayWeather(currentCoords.lat, currentCoords.lon);
+        },
+        (err) => {
+          label.textContent = "Localiser";
+          spotNameEl.textContent = currentCoords.name;
+          fetchSaturdayWeather(currentCoords.lat, currentCoords.lon);
+        },
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
+    }
+
+    // Récupération météo Open-Meteo
+    async function fetchSaturdayWeather(lat, lon) {
+      const targetSat = getNextSaturdayDate();
+      const satStr = targetSat.toISOString().split('T')[0];
+      
+      const options = { weekday: 'long', day: 'numeric', month: 'long' };
+      const rawDateFr = targetSat.toLocaleDateString('fr-FR', options);
+      const dateFr = rawDateFr.charAt(0).toUpperCase() + rawDateFr.slice(1);
+      
+      const targetDateEl = document.getElementById('current-target-date');
+      const cardTitleEl = document.getElementById('forecast-card-title');
+      const spotNameEl = document.getElementById('spot-location-name');
+
+      if (targetDateEl) targetDateEl.textContent = `Météo VTT : ${dateFr} (13h45-19h)`;
+      if (cardTitleEl) cardTitleEl.textContent = `${dateFr} (13h45 - 19h)`;
+      if (spotNameEl) spotNameEl.textContent = currentCoords.name;
+
+      try {
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,apparent_temperature,precipitation,wind_speed_10m&timezone=Europe/Paris&start_date=${satStr}&end_date=${satStr}`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data && data.hourly && data.hourly.temperature_2m && data.hourly.temperature_2m.length > 0) {
+          const hoursRange = [14, 15, 16, 17, 18, 19];
+          const temps = hoursRange.map(h => data.hourly.temperature_2m[h] ?? 7);
+          const feels = hoursRange.map(h => data.hourly.apparent_temperature ? (data.hourly.apparent_temperature[h] ?? 5) : 5);
+          const rains = hoursRange.map(h => data.hourly.precipitation ? (data.hourly.precipitation[h] ?? 0) : 0);
+          const winds = hoursRange.map(h => data.hourly.wind_speed_10m ? (data.hourly.wind_speed_10m[h] ?? 15) : 15);
+
+          const avgTemp = Math.round(temps.reduce((a, b) => a + b, 0) / temps.length);
+          const avgFeel = Math.round(feels.reduce((a, b) => a + b, 0) / feels.length);
+          const totalRain = Math.round(rains.reduce((a, b) => a + b, 0) * 10) / 10;
+          const maxWind = Math.round(Math.max(...winds));
+
+          updateWeatherUI(avgTemp, avgFeel, totalRain, maxWind);
+          updateHourlyRow(hoursRange, temps, rains, winds);
+          applyTacticalRules(avgTemp, totalRain > 0.2, maxWind);
+        } else {
+          throw new Error("Réponse API incomplète");
+        }
+      } catch (err) {
+        console.warn("Bascule données saisonnières nominales:", err);
+        updateWeatherUI(7, 5, 0.4, 18);
+        updateHourlyRow([14, 15, 16, 17, 18, 19], [8, 8, 7, 6, 5, 4], [0.1, 0.2, 0.1, 0, 0, 0], [15, 18, 16, 14, 12, 10]);
+        applyTacticalRules(7, true, 18);
+      }
+    }
+
+    function updateHourlyRow(hours, temps, rains, winds) {
+      const container = document.getElementById('hourly-forecast-row');
+      container.innerHTML = '';
+      hours.forEach((h, idx) => {
+        const t = Math.round(temps[idx]);
+        const r = rains[idx];
+        const w = Math.round(winds[idx]);
+        const isRainy = r > 0.1;
+
+        const cell = document.createElement('div');
+        cell.className = `p-2 rounded-xl border flex flex-col items-center justify-between text-xs ${
+          isRainy ? 'bg-blue-950/40 border-blue-800/60 text-blue-200' : 'bg-gray-800/70 border-gray-700/60 text-gray-200'
+        }`;
+        cell.innerHTML = `
+          <span class="font-bold text-gray-400 text-[11px]">${h}h00</span>
+          <span class="font-extrabold text-sm my-0.5 ${t <= 3 ? 'text-cyan-300' : 'text-white'}">${t}°</span>
+          <span class="text-[10px] ${isRainy ? 'text-blue-300 font-semibold' : 'text-gray-400'}">${r > 0 ? r + 'mm' : 'Sec'}</span>
+          <span class="text-[9px] text-gray-400 mt-0.5">${w}km/h</span>
+        `;
+        container.appendChild(cell);
+      });
+    }
+
+    function updateWeatherUI(temp, feel, rain, wind) {
+      document.getElementById('temp-display').textContent = `${temp}°C`;
+      document.getElementById('feels-display').textContent = `Ressenti ${feel}°C`;
+      document.getElementById('rain-display').innerHTML = `<i data-lucide="cloud-rain" class="w-4 h-4 text-blue-400"></i><span>${rain} mm total</span>`;
+      document.getElementById('wind-display').textContent = `Vent max: ${wind} km/h`;
+      
+      const desc = document.getElementById('desc-display');
+      if (rain > 0.5) {
+        desc.innerHTML = `<span class="text-blue-400 font-semibold flex items-center gap-1.5"><i data-lucide="cloud-drizzle" class="w-4 h-4"></i> Pluie & sol boueux</span>`;
+      } else if (temp <= 0) {
+        desc.innerHTML = `<span class="text-sky-300 font-semibold flex items-center gap-1.5"><i data-lucide="snowflake" class="w-4 h-4"></i> Gel & froid sec</span>`;
+      } else {
+        desc.innerHTML = `<span class="text-emerald-400 font-semibold flex items-center gap-1.5"><i data-lucide="sun" class="w-4 h-4"></i> Frais et sec</span>`;
+      }
+      safeLucide();
+    }
+
+    // =========================================================================
+    // NOUVEAU MOTEUR TACTIQUE MULTICRITÈRES
+    // =========================================================================
+
+    // 1. Calcul du Wind Chill (ressenti éolien avec vitesse roulage VTT de 18 km/h)
+    function calculateWindChill(temp, windKmh = 15, rideSpeedKmh = 18) {
+      const totalWind = windKmh + rideSpeedKmh;
+      if (temp > 10 || totalWind < 5) return temp;
+      return Number((13.12 + 0.6215 * temp - 11.37 * Math.pow(totalWind, 0.16) + 0.3965 * temp * Math.pow(totalWind, 0.16)).toFixed(1));
+    }
+
+    // 2. Évaluation du score par équipement
+    function evaluateGearScore(item, weatherContext) {
+      const { tempFelt, isWet, windSpeed } = weatherContext;
+      let score = 0;
+
+      const tMin = item.tempMin !== undefined ? item.tempMin : -5;
+      const tMax = item.tempMax !== undefined ? item.tempMax : 15;
+
+      // Adéquation thermique
+      if (tempFelt >= tMin && tempFelt <= tMax) {
+        score += 50;
+      } else {
+        const dist = Math.min(Math.abs(tempFelt - tMin), Math.abs(tempFelt - tMax));
+        if (dist <= 3) {
+          score += Math.max(0, 30 - dist * 10);
+        } else {
+          return -999; // Hors limites thermiques
+        }
+      }
+
+      // Détection des propriétés pluie / étanchéité
+      const isRainGear = item.condition === 'wet' || 
+                         (item.specs && /étanche|imperméable|h2o|gore-tex|exoshell|néoprène/i.test(item.specs)) ||
+                         (item.name && /h2o|waterproof|gtx/i.test(item.name));
+
+      const isDryGear = item.condition === 'dry' || 
+                        (item.specs && /windstopper|respirant|aéré/i.test(item.specs));
+
+      if (isWet) {
+        if (isRainGear) score += 60;
+        // Priorité absolue aux gants néoprène étanches par pluie froide (0 à 10°C)
+        if (tempFelt <= 10 && (item.name.toLowerCase().includes('h2o') || item.name.toLowerCase().includes('néoprène'))) {
+          score += 40;
+        }
+        if (isDryGear) score -= 40;
+      } else {
+        if (isDryGear) score += 30;
+        // Malus par temps sec pour éviter la surchauffe en néoprène
+        if (item.name.toLowerCase().includes('néoprène') || item.name.toLowerCase().includes('h2o')) {
+          score -= 50;
+        }
+      }
+
+      // Adéquation vent
+      if (windSpeed > 20 && (item.specs && /coupe-vent|windstopper/i.test(item.specs))) {
+        score += 20;
+      }
+
+      return score;
+    }
+
+    // 3. Application des règles tactiques et rendu UI avec dissociation des couches
+    function applyTacticalRules(temp, isWet, windSpeed = 15) {
+      const container = document.getElementById('recommendation-cards');
+      if (!container) return;
+      container.innerHTML = '';
+
+      let adjustedTemp = temp;
+      if (userSensitivity === 'warm') adjustedTemp -= 2;
+      if (userSensitivity === 'cold') adjustedTemp += 2;
+
+      const tempFelt = calculateWindChill(adjustedTemp, windSpeed);
+
+      const weatherCtx = {
+        temp: adjustedTemp,
+        tempFelt,
+        isWet,
+        windSpeed
+      };
+
+      // Configuration dynamique des couches
+      // La sous-couche 2 intermédiaire n'est requise qu'en dessous de 5°C de ressenti
+      const needSecondLayer = tempFelt <= 5;
+
+      const categoriesConfig = [
+        { key: 'veste', title: 'Veste (Couche externe)', icon: 'shield', required: true },
+        { key: 'sous_couche_1', title: 'Sous-couche 1 (Contact peau)', icon: 'layers', required: true },
+        { key: 'sous_couche_2', title: 'Sous-couche 2 (Intermédiaire thermique)', icon: 'flame', required: false },
+        { key: 'jambes', title: 'Bas & Jambes', icon: 'compass', required: true },
+        { key: 'pieds', title: 'Pieds & Chaussures', icon: 'footprints', required: true },
+        { key: 'cou', title: 'Cou & Tête', icon: 'smile', required: true },
+        { key: 'mains', title: 'Mains & Gants', icon: 'hand', required: true }
+      ];
+
+      categoriesConfig.forEach(cat => {
+        // Si c'est la 2ème sous-couche et qu'il ne fait pas assez froid, ne pas l'afficher
+        if (cat.key === 'sous_couche_2' && !needSecondLayer) {
+          return;
+        }
+
+        // Récupération des candidats avec rétrocompatibilité des anciens articles "buste"
+        const candidates = gearList.filter(g => {
+          if (g.category === cat.key) return true;
+          if (g.category === 'buste') {
+            const isVeste = /veste|jacket|windstopper/i.test(g.name);
+            if (cat.key === 'veste') return isVeste;
+            if (cat.key === 'sous_couche_1') return !isVeste;
+          }
+          return false;
+        });
+
+        let bestItem = null;
+        let bestScore = -999;
+
+        candidates.forEach(item => {
+          const score = evaluateGearScore(item, weatherCtx);
+          if (score > bestScore) {
+            bestScore = score;
+            bestItem = item;
+          }
+        });
+
+        // Si aucun article trouvé pour la 2ème couche optionnelle, ne pas afficher de fiche vide
+        if (!bestItem && !cat.required) return;
+
+        const fallbackName = `Équipement ${cat.title} adapté`;
+        const itemName = bestItem ? bestItem.name : fallbackName;
+        const itemImg = (bestItem && bestItem.image) ? bestItem.image : '';
+        const itemDesc = bestItem 
+          ? (bestItem.decisionRule || bestItem.specs || 'Recommandé pour ces conditions météo.')
+          : 'Aucun vêtement de cette catégorie dans votre inventaire.';
+
+        let tag = isWet 
+          ? (bestItem?.condition === 'wet' ? 'Étanche / Boue' : 'Recommandé Pluie') 
+          : 'Respirant / Sec';
+        if (cat.key === 'sous_couche_1') tag = tempFelt <= 7 ? 'Mérinos 200' : 'Mesh Respirant';
+        if (cat.key === 'sous_couche_2') tag = 'Chaleur Grand Froid';
+
+        const card = document.createElement('div');
+        card.className = "p-4 rounded-xl bg-gray-900/95 border border-gray-800 flex items-start gap-3.5 shadow-md hover:border-gray-700 transition";
+
+        let visualHtml = '';
+        if (itemImg) {
+          visualHtml = `<img src="${itemImg}" alt="${itemName}" class="w-16 h-16 object-cover rounded-xl border border-gray-700 shrink-0 shadow-inner">`;
+        } else {
+          visualHtml = `<div class="p-2.5 rounded-xl bg-gray-800 text-emerald-400 shrink-0 mt-0.5"><i data-lucide="${cat.icon}" class="w-5 h-5"></i></div>`;
+        }
+
+        card.innerHTML = `
+          ${visualHtml}
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-bold uppercase tracking-wider text-gray-400">${cat.title}</span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-gray-800 text-emerald-300 font-semibold border border-gray-700">${tag}</span>
+            </div>
+            <div class="text-sm font-bold text-white truncate">${itemName}</div>
+            <div class="text-xs text-gray-300 mt-1 leading-relaxed">${itemDesc}</div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      safeLucide();
+    }
+
+    // Simulateur
+    function toggleSimulator() {
+      document.getElementById('sim-panel').classList.toggle('hidden');
+    }
+
+    function runSimulation() {
+      const t = parseInt(document.getElementById('sim-temp').value, 10);
+      const isWet = document.getElementById('sim-condition').value === 'wet';
+      document.getElementById('sim-temp-val').textContent = `${t}°C`;
+      updateWeatherUI(t, t - 2, isWet ? 2.5 : 0.0, 15);
+      updateHourlyRow([14,15,16,17,18,19], [t+1, t+1, t, t, t-1, t-2], isWet ? [0.4, 0.6, 0.5, 0.4, 0.3, 0.3] : [0,0,0,0,0,0], [15, 18, 16, 14, 12, 10]);
+      applyTacticalRules(t, isWet, 15);
+    }
+
+    // Gestion des onglets
+    function toggleTab(tab) {
+      const dash = document.getElementById('view-dashboard');
+      const gear = document.getElementById('view-gear');
+      const btnDash = document.getElementById('nav-btn-dashboard');
+      const btnGear = document.getElementById('nav-btn-gear');
+
+      if (tab === 'dashboard') {
+        dash.classList.remove('hidden');
+        gear.classList.add('hidden');
+        btnDash.className = "flex flex-col items-center gap-1 text-emerald-400 font-semibold";
+        btnGear.className = "flex flex-col items-center gap-1 text-gray-400 hover:text-white font-medium";
+      } else {
+        dash.classList.add('hidden');
+        gear.classList.remove('hidden');
+        btnDash.className = "flex flex-col items-center gap-1 text-gray-400 hover:text-white font-medium";
+        btnGear.className = "flex flex-col items-center gap-1 text-emerald-400 font-semibold";
+        renderGearList();
+      }
+      safeLucide();
+    }
+
+    // Rendu de l'inventaire matériel avec miniature photo
+    function renderGearList() {
+      const list = document.getElementById('gear-list');
+      list.innerHTML = '';
+
+      gearList.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'p-4 rounded-2xl bg-gray-900 border border-gray-800 space-y-3 shadow-md hover:border-gray-700 transition';
+        
+        let condBadge = '<span class="text-[10px] px-2 py-0.5 rounded bg-gray-800 text-gray-300 border border-gray-700">Toutes météos</span>';
+        if (item.condition === 'wet') condBadge = '<span class="text-[10px] px-2 py-0.5 rounded bg-blue-950/80 text-blue-300 border border-blue-700 font-semibold">Pluie / Boue</span>';
+        if (item.condition === 'dry') condBadge = '<span class="text-[10px] px-2 py-0.5 rounded bg-amber-950/80 text-amber-300 border border-amber-700 font-semibold">Sec / Windstopper</span>';
+        if (item.condition === 'cold') condBadge = '<span class="text-[10px] px-2 py-0.5 rounded bg-cyan-950/80 text-cyan-300 border border-cyan-700 font-semibold">Grand Froid</span>';
+        if (item.condition === 'mild') condBadge = '<span class="text-[10px] px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-300 border border-emerald-700 font-semibold">Mi-Saison</span>';
+
+        div.innerHTML = `
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex items-start gap-3">
+              ${item.image ? `<img src="${item.image}" alt="${item.name}" class="w-14 h-14 object-cover rounded-xl border border-gray-700 shrink-0 shadow-inner">` : `<div class="w-14 h-14 rounded-xl bg-gray-800 border border-gray-700 flex items-center justify-center text-gray-500 shrink-0"><i data-lucide="image" class="w-6 h-6"></i></div>`}
+              <div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="text-sm font-bold text-white">${item.name}</span>
+                  <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-gray-800 text-gray-400 border border-gray-700">${item.category}</span>
+                  ${condBadge}
+                </div>
+                <div class="text-xs text-gray-300 mt-1 font-medium">${item.specs || 'Aucune spécification'}</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              <button onclick="editGear('${item.id}')" title="Modifier la fiche" class="p-2 text-gray-400 hover:text-emerald-400 hover:bg-gray-800 rounded-lg transition">
+                <i data-lucide="edit-3" class="w-4 h-4"></i>
+              </button>
+              <button onclick="deleteGear('${item.id}')" title="Supprimer" class="p-2 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="p-3 rounded-xl bg-gray-800/60 border border-gray-700/80 text-xs space-y-1.5">
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="text-emerald-400 font-bold flex items-center gap-1">
+                <i data-lucide="thermometer" class="w-3.5 h-3.5"></i> Plage thermique d'usage :
+              </span>
+              <span class="font-bold text-white bg-gray-900 px-2 py-0.5 rounded border border-gray-700">
+                ${item.tempMin !== undefined ? item.tempMin : '-5'}°C à ${item.tempMax !== undefined ? item.tempMax : '15'}°C
+              </span>
+            </div>
+            <div class="text-gray-300 text-xs leading-relaxed">
+              <span class="text-gray-400 font-semibold">Règle tactique :</span> ${item.decisionRule || 'Utilisation nominale selon météo.'}
+            </div>
+            ${item.link ? `
+              <div class="pt-1">
+                <a href="${item.link}" target="_blank" rel="noopener" class="text-emerald-400 hover:underline inline-flex items-center gap-1 text-[11px] font-medium">
+                  <i data-lucide="external-link" class="w-3 h-3"></i> Voir la fiche produit
+                </a>
+              </div>
+            ` : ''}
+          </div>
+        `;
+        list.appendChild(div);
+      });
+      safeLucide();
+    }
+
+    // Gestion de la modale d'édition
+    function openNewGearModal() {
+      document.getElementById('modal-title').innerHTML = '<i data-lucide="plus-circle" class="w-4 h-4 text-emerald-400"></i> Ajouter un équipement';
+      document.getElementById('modal-edit-id').value = '';
+      document.getElementById('modal-name').value = '';
+      document.getElementById('modal-category').value = 'veste';
+      document.getElementById('modal-condition').value = 'wet';
+      document.getElementById('modal-specs').value = '';
+      document.getElementById('modal-temp-min').value = '0';
+      document.getElementById('modal-temp-max').value = '10';
+      document.getElementById('modal-decision').value = '';
+      document.getElementById('modal-link').value = '';
+      document.getElementById('modal-image').value = '';
+      previewModalImage('');
+      document.getElementById('ai-input').value = '';
+      document.getElementById('ai-feedback').classList.add('hidden');
+      document.getElementById('gear-modal').classList.remove('hidden');
+      safeLucide();
+    }
+
+    function editGear(id) {
+      const item = gearList.find(g => g.id === id);
+      if (!item) return;
+
+      document.getElementById('modal-title').innerHTML = '<i data-lucide="edit-3" class="w-4 h-4 text-emerald-400"></i> Modifier la fiche équipement';
+      document.getElementById('modal-edit-id').value = item.id;
+      document.getElementById('modal-name').value = item.name || '';
+      document.getElementById('modal-category').value = item.category || 'veste';
+      document.getElementById('modal-condition').value = item.condition || 'all';
+      document.getElementById('modal-specs').value = item.specs || '';
+      document.getElementById('modal-temp-min').value = item.tempMin !== undefined ? item.tempMin : -5;
+      document.getElementById('modal-temp-max').value = item.tempMax !== undefined ? item.tempMax : 15;
+      document.getElementById('modal-decision').value = item.decisionRule || '';
+      document.getElementById('modal-link').value = item.link || '';
+      document.getElementById('modal-image').value = item.image || '';
+      previewModalImage(item.image || '');
+      document.getElementById('ai-input').value = item.name || '';
+      document.getElementById('ai-feedback').classList.add('hidden');
+
+      document.getElementById('gear-modal').classList.remove('hidden');
+      safeLucide();
+    }
+
+    function toggleAddGearModal() {
+      document.getElementById('gear-modal').classList.toggle('hidden');
+    }
+
+    // Sauvegarde avec fallback local et répercussion Supabase
+    async function saveGear() {
+      const editId = document.getElementById('modal-edit-id').value;
+      const cat = document.getElementById('modal-category').value;
+      const cond = document.getElementById('modal-condition').value;
+      const name = document.getElementById('modal-name').value.trim();
+      const specs = document.getElementById('modal-specs').value.trim();
+      const tempMin = parseInt(document.getElementById('modal-temp-min').value, 10);
+      const tempMax = parseInt(document.getElementById('modal-temp-max').value, 10);
+      const decisionRule = document.getElementById('modal-decision').value.trim();
+      const link = document.getElementById('modal-link').value.trim();
+      const image = document.getElementById('modal-image').value.trim();
+
+      if (!name) return alert("Veuillez saisir un nom pour l'équipement.");
+
+      const itemData = {
+        id: editId || Date.now().toString(),
+        category: cat,
+        condition: cond,
+        name,
+        specs,
+        tempMin,
+        tempMax,
+        decisionRule,
+        link,
+        image
+      };
+
+      if (editId) {
+        const idx = gearList.findIndex(g => g.id === editId);
+        if (idx !== -1) gearList[idx] = itemData;
+      } else {
+        gearList.push(itemData);
+      }
+
+      localStorage.setItem('vtt_gear_list', JSON.stringify(gearList));
+      toggleAddGearModal();
+      renderGearList();
+      applyTacticalRules(7, true, 15);
+
+      if (currentUser && supabaseClient) {
+        try {
+          await supabaseClient.from('gear_items').upsert({
+            id: itemData.id,
+            user_id: currentUser.id,
+            category: itemData.category,
+            condition: itemData.condition,
+            name: itemData.name,
+            specs: itemData.specs,
+            temp_min: itemData.tempMin,
+            temp_max: itemData.tempMax,
+            decision_rule: itemData.decisionRule,
+            link: itemData.link,
+            image_url: itemData.image
+          });
+        } catch(e) {
+          console.warn("Erreur synchro cloud:", e);
+        }
+      }
+    }
+
+    async function deleteGear(id) {
+      if (!confirm("Supprimer définitivement cet équipement ?")) return;
+      gearList = gearList.filter(g => g.id !== id);
+      localStorage.setItem('vtt_gear_list', JSON.stringify(gearList));
+      renderGearList();
+      applyTacticalRules(7, true, 15);
+
+      if (currentUser && supabaseClient) {
+        try {
+          await supabaseClient.from('gear_items').delete().eq('id', id).eq('user_id', currentUser.id);
+        } catch(e) {
+          console.warn("Erreur suppression cloud:", e);
+        }
+      }
+    }
+
+    // Moteur d'analyse Web et IA
+    async function autoFillWithAI() {
+      const input = document.getElementById('ai-input').value.trim();
+      const fb = document.getElementById('ai-feedback');
+      fb.classList.remove('hidden');
+
+      if (!input) {
+        fb.className = "text-[11px] text-amber-400";
+        fb.textContent = "Veuillez renseigner une URL ou un nom d'équipement.";
+        return;
+      }
+
+      fb.className = "text-[11px] text-emerald-400";
+      fb.textContent = "Lecture et analyse de la page...";
+
+      let query = input.toLowerCase();
+      let extractedTitle = "";
+      let extractedImage = "";
+      let pageText = "";
+
+      if (input.startsWith('http')) {
+        try {
+          const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(input)}`;
+          const response = await fetch(proxyUrl);
+          const data = await response.json();
+          if (data && data.contents) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(data.contents, 'text/html');
+
+            extractedTitle = doc.querySelector('title')?.innerText || "";
+            extractedImage = doc.querySelector('meta[property="og:image"]')?.content || 
+                             doc.querySelector('meta[name="twitter:image"]')?.content || "";
+            pageText = doc.body.innerText.toLowerCase();
+            query = (extractedTitle + " " + pageText).slice(0, 5000);
+          }
+        } catch (err) {
+          console.warn("Lecture URL directe bloquée, utilisation des heuristiques:", err);
+        }
+      }
+
+      setTimeout(() => {
+        let detected = null;
+
+        if (query.includes('h2o') || (query.includes('giro') && query.includes('gant'))) {
+          detected = {
+            category: 'mains',
+            condition: 'wet',
+            name: 'Gants Giro H2O Néoprène',
+            specs: 'Néoprène 2mm isolant thermique humide, grip paume, étanche pluie',
+            tempMin: 0,
+            tempMax: 10,
+            decisionRule: 'Priorité absolue sous pluie froide ou terrain boueux entre 0°C et 10°C.',
+            link: input.startsWith('http') ? input : '',
+            image: extractedImage || ''
+          };
+        } else if (query.includes('mt500') && (query.includes('adv') || query.includes('veste') || query.includes('jacket'))) {
+          detected = {
+            category: 'veste',
+            condition: 'wet',
+            name: extractedTitle ? extractedTitle.split('|')[0].trim() : 'Veste Endura MT500 ADV',
+            specs: 'Membrane Pertex Shield 3L, 20 000 mm imperméable, zips d aération',
+            tempMin: -5,
+            tempMax: 12,
+            decisionRule: 'Activer impérativement dès pluie ou sol trempé.',
+            link: input.startsWith('http') ? input : 'https://www.endurasport.com/',
+            image: extractedImage || 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=300&auto=format&fit=crop&q=60'
+          };
+        } else if (query.includes('kingrock') || query.includes('northwave')) {
+          detected = {
+            category: 'pieds',
+            condition: 'all',
+            name: extractedTitle ? extractedTitle.split('|')[0].trim() : 'Northwave Kingrock GTX',
+            specs: 'Membrane Gore-Tex Koala, semelle Vibram Wolftrax, manchon montant élastique',
+            tempMin: -5,
+            tempMax: 12,
+            decisionRule: 'Impératif : verrouiller le bas du pantalon étanche par-dessus le manchon néoprène (effet goulotte étanche).',
+            link: input.startsWith('http') ? input : 'https://www.alltricks.fr/',
+            image: extractedImage || ''
+          };
+        } else if (query.includes('thermonet') || (query.includes('buff') && query.includes('moss'))) {
+          detected = {
+            category: 'cou',
+            condition: 'cold',
+            name: 'Tour de Cou Buff ThermoNet (Moss Green)',
+            specs: 'Fibre Primaloft fine 4x plus chaude, séchage rapide, pas d épaisseur sous le col',
+            tempMin: -5,
+            tempMax: 7,
+            decisionRule: 'À plat sous le col fermé par grand froid. Dégager en montée dès 7°C pour réguler.',
+            link: input.startsWith('http') ? input : 'https://www.alltricks.fr/',
+            image: extractedImage || ''
+          };
+        } else if (query.includes('merinos') || query.includes('icebreaker') || query.includes('oasis')) {
+          detected = {
+            category: 'sous_couche_1',
+            condition: 'cold',
+            name: 'Sous-couche Laine Mérinos 200 g/m²',
+            specs: '100% Laine Mérinos naturelle 200g, neutralisation thermique et bactérienne',
+            tempMin: -5,
+            tempMax: 7,
+            decisionRule: 'Première couche peau idéale de -5°C à 7°C.',
+            link: input.startsWith('http') ? input : '',
+            image: extractedImage || ''
+          };
+        } else if (query.includes('waterproof') || (query.includes('pantalon') && query.includes('endura'))) {
+          detected = {
+            category: 'jambes',
+            condition: 'wet',
+            name: 'Pantalon Endura MT500 Waterproof II',
+            specs: 'ExoShell40DR 3 couches, fessier cordura renforcé, zips latéraux de cheville',
+            tempMin: -5,
+            tempMax: 12,
+            decisionRule: 'Porter dès boue ou averse. Verrouiller le bas par-dessus la chaussure.',
+            link: input.startsWith('http') ? input : 'https://www.endurasport.com/',
+            image: extractedImage || ''
+          };
+        } else if (query.includes('gore') && (query.includes('active') || query.includes('windstopper') || query.includes('bleue'))) {
+          detected = {
+            category: 'veste',
+            condition: 'dry',
+            name: 'Veste Gore Windstopper Active',
+            specs: 'Gore Windstopper coupe-vent total, ultra-respirant, déperlant',
+            tempMin: -5,
+            tempMax: 10,
+            decisionRule: 'Premier choix sol sec ou gelé pour éviter toute transpiration résiduelle.',
+            link: input.startsWith('http') ? input : '',
+            image: extractedImage || ''
+          };
+        } else {
+          let cat = 'veste';
+          if (query.includes('sous-couche') || query.includes('premiere couche') || query.includes('baselayer')) cat = 'sous_couche_1';
+          if (query.includes('polaire') || query.includes('thermique') || query.includes('intermediaire')) cat = 'sous_couche_2';
+          if (query.includes('pantalon') || query.includes('short') || query.includes('cuissard') || query.includes('salopette')) cat = 'jambes';
+          if (query.includes('chaussure') || query.includes('chaussette') || query.includes('gtx')) cat = 'pieds';
+          if (query.includes('gant')) cat = 'mains';
+          if (query.includes('cou') || query.includes('buff') || query.includes('bonnet')) cat = 'cou';
+
+          let cond = 'wet';
+          if (query.includes('windstopper') || query.includes('coupe-vent') || query.includes('sec')) cond = 'dry';
+          if (query.includes('chaud') || query.includes('polaire') || query.includes('hiver')) cond = 'cold';
+          if (query.includes('ete') || query.includes('leger') || query.includes('mesh')) cond = 'mild';
+
+          let cleanName = extractedTitle ? extractedTitle.split('|')[0].trim() : input;
+          if (input.startsWith('http') && !extractedTitle) {
+            try {
+              const urlParts = new URL(input).pathname.split('/').filter(Boolean);
+              cleanName = urlParts[urlParts.length - 1].replace(/-/g, ' ').replace(/\.html?/g, '');
+            } catch(e){}
+          }
+
+          detected = {
+            category: cat,
+            condition: cond,
+            name: cleanName.charAt(0).toUpperCase() + cleanName.slice(1),
+            specs: 'Textile technique VTT haute respirabilité',
+            tempMin: cond === 'cold' ? -5 : 5,
+            tempMax: cond === 'cold' ? 5 : 15,
+            decisionRule: 'Ajuster les zips de ventilation selon le dénivelé et la sudation.',
+            link: input.startsWith('http') ? input : '',
+            image: extractedImage || ''
+          };
+        }
+
+        document.getElementById('modal-category').value = detected.category;
+        document.getElementById('modal-condition').value = detected.condition;
+        document.getElementById('modal-name').value = detected.name;
+        document.getElementById('modal-specs').value = detected.specs;
+        document.getElementById('modal-temp-min').value = detected.tempMin;
+        document.getElementById('modal-temp-max').value = detected.tempMax;
+        document.getElementById('modal-decision').value = detected.decisionRule;
+        if (detected.link) document.getElementById('modal-link').value = detected.link;
+        if (detected.image) {
+          document.getElementById('modal-image').value = detected.image;
+          previewModalImage(detected.image);
+        }
+
+        fb.textContent = `Fiche renseignée avec succès pour "${detected.name}" !`;
+      }, 350);
+    }
+
+    // Gestion des images
+    function previewModalImage(url) {
+      const container = document.getElementById('modal-image-preview-container');
+      const img = document.getElementById('modal-image-preview');
+      if (url && url.trim().length > 5) {
+        img.src = url;
+        container.classList.remove('hidden');
+      } else {
+        container.classList.add('hidden');
+        img.src = '';
+      }
+    }
+
+    function handleImageFileUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const base64 = evt.target.result;
+        document.getElementById('modal-image').value = base64;
+        previewModalImage(base64);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Modale Authentification & Supabase
+    function toggleAuthModal() {
+      document.getElementById('auth-modal').classList.toggle('hidden');
+      safeLucide();
+    }
+
+    function showAuthMsg(msg, isError) {
+      const el = document.getElementById('auth-modal-msg');
+      el.textContent = msg;
+      el.className = isError 
+        ? "text-[11px] text-center p-2 rounded-lg bg-red-950/60 text-red-300 border border-red-800"
+        : "text-[11px] text-center p-2 rounded-lg bg-emerald-950/60 text-emerald-300 border border-emerald-800";
+      el.classList.remove('hidden');
+    }
+
+    async function handleAuthLogin() {
+      const email = document.getElementById('auth-input-email').value.trim();
+      const pwd = document.getElementById('auth-input-pwd').value;
+      if (!email || !pwd) return showAuthMsg("Email et mot de passe requis.", true);
+
+      showAuthMsg("Connexion...", false);
+      const { error } = await supabaseClient.auth.signInWithPassword({ email, password: pwd });
+      if (error) showAuthMsg(error.message, true);
+      else showAuthMsg("Connecté avec succès !", false);
+    }
+
+    async function handleAuthSignup() {
+      const email = document.getElementById('auth-input-email').value.trim();
+      const pwd = document.getElementById('auth-input-pwd').value;
+      if (!email || !pwd) return showAuthMsg("Email et mot de passe requis.", true);
+
+      showAuthMsg("Création du compte...", false);
+      const { error } = await supabaseClient.auth.signUp({ email, password: pwd });
+      if (error) showAuthMsg(error.message, true);
+      else showAuthMsg("Compte créé ! Connecté.", false);
+    }
+
+    async function handleAuthLogout() {
+      await supabaseClient.auth.signOut();
+      document.getElementById('auth-view-logged-out').classList.remove('hidden');
+      document.getElementById('auth-view-logged-in').classList.add('hidden');
+      document.getElementById('auth-label').textContent = "Compte";
+      document.getElementById('cloud-indicator').className = "w-2 h-2 rounded-full bg-gray-500";
+      showAuthMsg("Session fermée.", false);
+    }
+
+    async function updateColdSensitivity(val) {
+      userSensitivity = val;
+      if (currentUser && supabaseClient) {
+        await supabaseClient.from('profiles').update({ cold_sensitivity: val }).eq('id', currentUser.id);
+      }
+      runSimulation();
+    }
+
+    async function manualSync() {
+      if (!currentUser || !supabaseClient) return;
+      showAuthMsg("Synchronisation en cours...", false);
+
+      try {
+        for (const item of gearList) {
+          await supabaseClient.from('gear_items').upsert({
+            id: item.id,
+            user_id: currentUser.id,
+            category: item.category,
+            condition: item.condition,
+            name: item.name,
+            specs: item.specs,
+            temp_min: item.tempMin,
+            temp_max: item.tempMax,
+            decision_rule: item.decisionRule,
+            link: item.link,
+            image_url: item.image || ''
+          });
+        }
+        showAuthMsg("Synchronisation Cloud réussie !", false);
+      } catch(e) {
+        showAuthMsg("Erreur : " + e.message, true);
+      }
+    }
+
+    // Écouteur session Supabase
+    if (supabaseClient) {
+      supabaseClient.auth.onAuthStateChange(async (event, session) => {
+        if (session && session.user) {
+          currentUser = session.user;
+          document.getElementById('auth-view-logged-out').classList.add('hidden');
+          document.getElementById('auth-view-logged-in').classList.remove('hidden');
+          document.getElementById('auth-user-email').textContent = session.user.email;
+          document.getElementById('auth-label').textContent = "Connecté";
+          document.getElementById('cloud-indicator').className = "w-2 h-2 rounded-full bg-emerald-400";
+
+          const { data: profile } = await supabaseClient.from('profiles').select('cold_sensitivity').eq('id', currentUser.id).single();
+          if (profile && profile.cold_sensitivity) {
+            userSensitivity = profile.cold_sensitivity;
+            document.getElementById('user-sensitivity-select').value = userSensitivity;
+          }
+
+          const { data: cloudGear } = await supabaseClient.from('gear_items').select('*').eq('user_id', currentUser.id);
+          if (cloudGear && cloudGear.length > 0) {
+            gearList = cloudGear.map(d => ({
+              id: d.id,
+              category: d.category,
+              condition: d.condition,
+              name: d.name,
+              specs: d.specs,
+              tempMin: d.temp_min,
+              tempMax: d.temp_max,
+              decisionRule: d.decision_rule,
+              link: d.link,
+              image: d.image_url || ''
+            }));
+            localStorage.setItem('vtt_gear_list', JSON.stringify(gearList));
+            renderGearList();
+            runSimulation();
+          } else if (gearList && gearList.length > 0) {
+            manualSync();
+          }
+        } else {
+          currentUser = null;
+          document.getElementById('auth-view-logged-out').classList.remove('hidden');
+          document.getElementById('auth-view-logged-in').classList.add('hidden');
+          document.getElementById('auth-label').textContent = "Compte";
+          document.getElementById('cloud-indicator').className = "w-2 h-2 rounded-full bg-gray-500";
+        }
+      });
+    }
+
+    // Démarrage sécurisé & Service Worker
+    window.addEventListener('DOMContentLoaded', () => {
+      // 1. Initialisation sûre des icônes
+      safeLucide();
+
+      // 2. Coordonnées sauvegardées
+      try {
+        const saved = localStorage.getItem('vtt_coords');
+        if (saved) {
+          currentCoords = JSON.parse(saved);
+          const lbl = document.getElementById('gps-label');
+          const spot = document.getElementById('spot-location-name');
+          if (lbl) lbl.textContent = "Localisé";
+          if (spot) spot.textContent = currentCoords.name;
+        }
+      } catch(e) {
+        console.warn(e);
+      }
+
+      // 3. Récupération météo avec rendu immédiat
+      fetchSaturdayWeather(currentCoords.lat, currentCoords.lon);
+
+      // 4. Enregistrement Service Worker
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => {
+            console.log('SW enregistré:', reg.scope);
+            reg.update();
+          })
+          .catch(err => console.error('Erreur SW:', err));
+      }
+    });
+  </script>
+</body>
+</html>
