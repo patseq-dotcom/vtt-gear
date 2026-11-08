@@ -748,7 +748,7 @@
     }
 
     // 3. Application des règles tactiques et rendu UI
-    function applyTacticalRules(temp, isWet, windSpeed = 15) {
+   function applyTacticalRules(temp, isWet, windSpeed = 15) {
       const container = document.getElementById('recommendation-cards');
       if (!container) return;
       container.innerHTML = '';
@@ -766,16 +766,37 @@
         windSpeed
       };
 
+      // Configuration des couches recommandées
       const categoriesConfig = [
-        { key: 'buste', title: 'Buste & Haut', icon: 'shield' },
-        { key: 'jambes', title: 'Bas & Jambes', icon: 'compass' },
-        { key: 'pieds', title: 'Pieds & Chaussures', icon: 'footprints' },
-        { key: 'cou', title: 'Cou & Tête', icon: 'smile' },
-        { key: 'mains', title: 'Mains & Gants', icon: 'hand' }
+        { key: 'veste', title: 'Veste (Couche externe)', icon: 'shield', required: true },
+        { key: 'sous_couche_1', title: 'Sous-couche 1 (Base peau)', icon: 'layers', required: true },
+        { key: 'sous_couche_2', title: 'Sous-couche 2 (Intermédiaire)', icon: 'flame', required: false },
+        { key: 'jambes', title: 'Bas & Jambes', icon: 'compass', required: true },
+        { key: 'pieds', title: 'Pieds & Chaussures', icon: 'footprints', required: true },
+        { key: 'cou', title: 'Cou & Tête', icon: 'smile', required: true },
+        { key: 'mains', title: 'Mains & Gants', icon: 'hand', required: true }
       ];
 
+      // Règle d'activation de la 2ème sous-couche : froid marqué (ressenti <= 4°C)
+      const needSecondBaseLayer = tempFelt <= 4;
+
       categoriesConfig.forEach(cat => {
-        const candidates = gearList.filter(g => g.category === cat.key);
+        // Si c'est la 2ème sous-couche et qu'il ne fait pas assez froid, on ne l'affiche pas
+        if (cat.key === 'sous_couche_2' && !needSecondBaseLayer) {
+          return;
+        }
+
+        // Compatibilité avec vos anciens articles encore tagués "buste"
+        const candidates = gearList.filter(g => {
+          if (g.category === cat.key) return true;
+          // Rétrocompatibilité : si l'article est encore tagué 'buste'
+          if (g.category === 'buste') {
+            const isVeste = /veste|jacket|windstopper/i.test(g.name);
+            if (cat.key === 'veste') return isVeste;
+            if (cat.key === 'sous_couche_1') return !isVeste;
+          }
+          return false;
+        });
         
         let bestItem = null;
         let bestScore = -999;
@@ -787,6 +808,9 @@
             bestItem = item;
           }
         });
+
+        // Si aucun article trouvé pour la 2ème couche optionnelle, on n'affiche pas de carte vide
+        if (!bestItem && !cat.required) return;
 
         const fallbackName = `Équipement ${cat.title} adapté`;
         const itemName = bestItem ? bestItem.name : fallbackName;
