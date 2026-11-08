@@ -164,7 +164,7 @@
         </div>
       </div>
 
-      <!-- Recommandation Tenue avec images -->
+      <!-- Recommandation Tenue avec fiches séparées par couche -->
       <div class="space-y-3.5">
         <h2 class="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-2 px-1">
           <i data-lucide="sparkles" class="w-4 h-4 text-emerald-400"></i>
@@ -175,7 +175,7 @@
 
     </section>
 
-    <!-- Vue: Inventaire Matériel -->
+    <!-- Vue: Inventaire Matériel (Garage) -->
     <section id="view-gear" class="hidden space-y-4">
       <div class="flex items-center justify-between">
         <div>
@@ -183,11 +183,22 @@
             <i data-lucide="package" class="w-5 h-5 text-emerald-400"></i>
             Garage & Fiches Matériel
           </h2>
-          <p class="text-xs text-gray-400">Inventaire dynamique et critères d'activation</p>
+          <p class="text-xs text-gray-400">Inventaire séparé par couches techniques</p>
         </div>
         <button onclick="openNewGearModal()" class="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold shadow transition">
           <i data-lucide="plus" class="w-4 h-4"></i> Ajouter
         </button>
+      </div>
+
+      <!-- Filtres rapides par type dans le garage -->
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scroll text-xs">
+        <button onclick="filterGarageCategory('all')" id="filter-btn-all" class="px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-semibold whitespace-nowrap">Tous</button>
+        <button onclick="filterGarageCategory('veste')" id="filter-btn-veste" class="px-3 py-1.5 rounded-xl bg-gray-800/80 text-gray-300 border border-gray-700 font-medium whitespace-nowrap">Vestes</button>
+        <button onclick="filterGarageCategory('sous_couches')" id="filter-btn-sous_couches" class="px-3 py-1.5 rounded-xl bg-gray-800/80 text-gray-300 border border-gray-700 font-medium whitespace-nowrap">Sous-couches (1 & 2)</button>
+        <button onclick="filterGarageCategory('jambes')" id="filter-btn-jambes" class="px-3 py-1.5 rounded-xl bg-gray-800/80 text-gray-300 border border-gray-700 font-medium whitespace-nowrap">Jambes</button>
+        <button onclick="filterGarageCategory('pieds')" id="filter-btn-pieds" class="px-3 py-1.5 rounded-xl bg-gray-800/80 text-gray-300 border border-gray-700 font-medium whitespace-nowrap">Pieds</button>
+        <button onclick="filterGarageCategory('mains')" id="filter-btn-mains" class="px-3 py-1.5 rounded-xl bg-gray-800/80 text-gray-300 border border-gray-700 font-medium whitespace-nowrap">Mains</button>
+        <button onclick="filterGarageCategory('cou')" id="filter-btn-cou" class="px-3 py-1.5 rounded-xl bg-gray-800/80 text-gray-300 border border-gray-700 font-medium whitespace-nowrap">Cou & Tête</button>
       </div>
 
       <div id="gear-list" class="space-y-3"></div>
@@ -195,7 +206,7 @@
 
   </main>
 
-  <!-- Modale d'ajout/édition avec parseur web & upload image -->
+  <!-- Modale d'ajout/édition avec sélection précise des couches -->
   <div id="gear-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 overflow-y-auto">
     <div class="bg-gray-900 border border-gray-800 rounded-2xl max-w-lg w-full p-5 space-y-4 shadow-2xl my-6 max-h-[90vh] overflow-y-auto custom-scroll">
       
@@ -231,10 +242,12 @@
       <div class="space-y-3 text-xs">
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-gray-300 font-semibold mb-1">Catégorie</label>
+            <label class="block text-gray-300 font-semibold mb-1">Catégorie technique</label>
             <select id="modal-category" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-white">
-              <option value="buste">Buste (Veste / Sous-couche)</option>
-              <option value="jambes">Jambes (Pantalon / Salopette)</option>
+              <option value="veste">Veste (Couche externe étanche/coupe-vent)</option>
+              <option value="sous_couche_1">Sous-couche 1 (Contact peau mérinos/mesh)</option>
+              <option value="sous_couche_2">Sous-couche 2 (Intermédiaire thermique/polaire)</option>
+              <option value="jambes">Jambes (Pantalon / Cuissard long)</option>
               <option value="pieds">Pieds (Chaussures / Chaussettes)</option>
               <option value="mains">Mains (Gants)</option>
               <option value="cou">Cou & Tête (Buff / Bonnet)</option>
@@ -280,7 +293,7 @@
           </div>
           <div>
             <label class="block text-gray-400 text-[11px] mb-1">Règle de décision</label>
-            <textarea id="modal-decision" rows="2" placeholder="ex: Ne porter qu'avec première couche fine si > 8°C." class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white text-xs"></textarea>
+            <textarea id="modal-decision" rows="2" placeholder="ex: Porter par temps humide ou froid vif." class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white text-xs"></textarea>
           </div>
         </div>
 
@@ -399,6 +412,7 @@
 
     let currentUser = null;
     let userSensitivity = 'neutral';
+    let currentGarageFilter = 'all';
 
     // Initialisation sécurisée des icônes Lucide
     function safeLucide() {
@@ -411,23 +425,23 @@
       }
     }
 
-    // Dotation matérielle initiale avec critères et images
+    // Dotation matérielle initiale avec dissociation stricte des couches
     const DEFAULT_GEAR = [
       {
         id: '1',
-        category: 'buste',
+        category: 'veste',
         name: 'Veste Endura MT500 ADV (Vert Flashy)',
         specs: 'Membrane Pertex Shield 3L, imperméabilité 20 000 mm, zips d aération',
         condition: 'wet',
         tempMin: -5,
         tempMax: 12,
-        decisionRule: 'Activer impérativement dès pluie ou terrain trempé. Si T° > 8°C, sous-couche fine sans mérinos.',
+        decisionRule: 'Couche externe étanche indispensable dès pluie ou projections de boue.',
         link: 'https://www.endurasport.com/',
         image: 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=300&auto=format&fit=crop&q=60'
       },
       {
         id: '2',
-        category: 'buste',
+        category: 'veste',
         name: 'Veste Gore Power Active Bleue',
         specs: 'Membrane Gore Windstopper coupe-vent 100%, respirabilité maximale',
         condition: 'dry',
@@ -439,30 +453,42 @@
       },
       {
         id: '3',
-        category: 'buste',
+        category: 'sous_couche_1',
         name: 'Sous-couche Icebreaker 200 Oasis',
         specs: '100% Laine Mérinos 200 g/m², chaleur constante même mouillé',
         condition: 'cold',
         tempMin: -5,
         tempMax: 7,
-        decisionRule: 'Première couche idéale de -5°C à 7°C. Éviter au-dessus de 8°C sous veste étanche.',
+        decisionRule: 'Première couche peau idéale de -5°C à 7°C. Éviter au-dessus de 8°C sous veste étanche.',
         link: '',
         image: ''
       },
       {
         id: '4',
-        category: 'buste',
+        category: 'sous_couche_1',
         name: 'Sous-couche Synthétique Aérée',
         specs: 'Mesh gaufré ultra-respirant à séchage rapide',
         condition: 'mild',
         tempMin: 8,
         tempMax: 15,
-        decisionRule: 'Substitut au mérinos dès que la température dépasse 8°C.',
+        decisionRule: 'Substitut au mérinos au contact de la peau dès que la température dépasse 8°C.',
         link: '',
         image: ''
       },
       {
         id: '5',
+        category: 'sous_couche_2',
+        name: 'Couche Intermédiaire Polaire Fine / Maillot Thermique',
+        specs: 'Maillot manches longues micro-polaire respirant pour isolation d appoint',
+        condition: 'cold',
+        tempMin: -5,
+        tempMax: 5,
+        decisionRule: 'Intercalée entre la première couche mérinos et la veste dès que le ressenti descend sous 5°C.',
+        link: '',
+        image: ''
+      },
+      {
+        id: '6',
         category: 'jambes',
         name: 'Pantalon Endura MT500 Waterproof II',
         specs: 'ExoShell40DR 3 couches étanche, fessier renforcé cordura',
@@ -474,7 +500,7 @@
         image: ''
       },
       {
-        id: '6',
+        id: '7',
         category: 'jambes',
         name: 'Salopette Thermique Gore Windstopper',
         specs: 'Cuissard long doublé polaire fine avec plastron coupe-vent',
@@ -486,7 +512,7 @@
         image: ''
       },
       {
-        id: '7',
+        id: '8',
         category: 'pieds',
         name: 'Northwave Kingrock GTX',
         specs: 'Membrane Gore-Tex Koala, semelle Vibram Wolftrax, manchon montant élastique',
@@ -498,7 +524,7 @@
         image: ''
       },
       {
-        id: '8',
+        id: '9',
         category: 'cou',
         name: 'Tour de Cou Buff ThermoNet (Moss Green)',
         specs: 'Fibre Primaloft 4x plus chaude, coupe tubulaire fine sans bourrelet',
@@ -510,7 +536,7 @@
         image: ''
       },
       {
-        id: '9',
+        id: '10',
         category: 'mains',
         name: 'Gants Giro H2O Néoprène',
         specs: 'Néoprène 2mm isolant thermique humide, grip siliconé paume',
@@ -522,7 +548,7 @@
         image: ''
       },
       {
-        id: '10',
+        id: '11',
         category: 'mains',
         name: 'Gants Hiver Grand Froid Déperlants',
         specs: 'Paume coupe-vent antidérapante, intérieur micropolaire respirant',
@@ -535,7 +561,57 @@
       }
     ];
 
-    let gearList = JSON.parse(localStorage.getItem('vtt_gear_list')) || DEFAULT_GEAR;
+    // Migration automatique des anciens éléments de stockage
+    function sanitizeAndMigrateGear(list) {
+      if (!list || !Array.isArray(list) || list.length === 0) return DEFAULT_GEAR;
+
+      let hasSousCouche2 = false;
+
+      list.forEach(item => {
+        const name = (item.name || '').toLowerCase();
+        const cat = item.category;
+
+        if (cat === 'sous_couche_2') {
+          hasSousCouche2 = true;
+        }
+
+        // Si l'article avait l'ancienne catégorie "buste"
+        if (cat === 'buste') {
+          if (name.includes('mt500') || name.includes('adv') || name.includes('gore') || name.includes('power') || name.includes('veste') || name.includes('jacket') || name.includes('windstopper')) {
+            item.category = 'veste';
+          } else if (name.includes('merinos') || name.includes('mérinos') || name.includes('icebreaker') || name.includes('oasis') || name.includes('synthétique') || name.includes('aérée') || name.includes('mesh')) {
+            item.category = 'sous_couche_1';
+          } else if (name.includes('polaire') || name.includes('intermédiaire') || name.includes('thermique')) {
+            item.category = 'sous_couche_2';
+            hasSousCouche2 = true;
+          } else {
+            item.category = 'veste';
+          }
+        }
+      });
+
+      // Si l'utilisateur n'a aucune 2ème sous-couche enregistrée, en ajouter une par défaut
+      if (!hasSousCouche2) {
+        list.push({
+          id: 'sc2_auto_added',
+          category: 'sous_couche_2',
+          name: 'Couche Intermédiaire Polaire Fine / Maillot Thermique',
+          specs: 'Maillot manches longues micro-polaire respirant pour isolation d appoint',
+          condition: 'cold',
+          tempMin: -5,
+          tempMax: 5,
+          decisionRule: 'Intercalée entre la première couche mérinos et la veste dès que le ressenti descend sous 5°C.',
+          link: '',
+          image: ''
+        });
+      }
+
+      return list;
+    }
+
+    let rawStoredGear = JSON.parse(localStorage.getItem('vtt_gear_list')) || DEFAULT_GEAR;
+    let gearList = sanitizeAndMigrateGear(rawStoredGear);
+    localStorage.setItem('vtt_gear_list', JSON.stringify(gearList));
 
     // Coordonnées par défaut : Vallée de Chevreuse
     let currentCoords = {
@@ -604,14 +680,15 @@
       const satStr = targetSat.toISOString().split('T')[0];
       
       const options = { weekday: 'long', day: 'numeric', month: 'long' };
-      const dateFr = targetSat.toLocaleDateString('fr-FR', options);
+      const rawDateFr = targetSat.toLocaleDateString('fr-FR', options);
+      const dateFr = rawDateFr.charAt(0).toUpperCase() + rawDateFr.slice(1);
       
       const targetDateEl = document.getElementById('current-target-date');
       const cardTitleEl = document.getElementById('forecast-card-title');
       const spotNameEl = document.getElementById('spot-location-name');
 
-      if (targetDateEl) targetDateEl.textContent = `Météo VTT : Samedi ${dateFr} (13h45-19h)`;
-      if (cardTitleEl) cardTitleEl.textContent = `Samedi ${dateFr} (13h45 - 19h)`;
+      if (targetDateEl) targetDateEl.textContent = `Météo VTT : ${dateFr} (13h45-19h)`;
+      if (cardTitleEl) cardTitleEl.textContent = `${dateFr} (13h45 - 19h)`;
       if (spotNameEl) spotNameEl.textContent = currentCoords.name;
 
       try {
@@ -747,8 +824,8 @@
       return score;
     }
 
-    // 3. Application des règles tactiques et rendu UI
-   function applyTacticalRules(temp, isWet, windSpeed = 15) {
+    // 3. Application des règles tactiques et rendu UI avec dissociation stricte des couches
+    function applyTacticalRules(temp, isWet, windSpeed = 15) {
       const container = document.getElementById('recommendation-cards');
       if (!container) return;
       container.innerHTML = '';
@@ -766,38 +843,38 @@
         windSpeed
       };
 
-      // Configuration des couches recommandées
+      // Règle d'activation de la 2ème sous-couche intermédiaire : ressenti <= 5°C
+      const needSecondLayer = tempFelt <= 5;
+
       const categoriesConfig = [
-        { key: 'veste', title: 'Veste (Couche externe)', icon: 'shield', required: true },
-        { key: 'sous_couche_1', title: 'Sous-couche 1 (Base peau)', icon: 'layers', required: true },
-        { key: 'sous_couche_2', title: 'Sous-couche 2 (Intermédiaire)', icon: 'flame', required: false },
+        { key: 'veste', title: 'Veste (Couche 3 - Externe)', icon: 'shield', required: true },
+        { key: 'sous_couche_2', title: 'Sous-couche 2 (Intermédiaire thermique)', icon: 'flame', required: false },
+        { key: 'sous_couche_1', title: 'Sous-couche 1 (Couche 1 - Contact peau)', icon: 'layers', required: true },
         { key: 'jambes', title: 'Bas & Jambes', icon: 'compass', required: true },
         { key: 'pieds', title: 'Pieds & Chaussures', icon: 'footprints', required: true },
         { key: 'cou', title: 'Cou & Tête', icon: 'smile', required: true },
         { key: 'mains', title: 'Mains & Gants', icon: 'hand', required: true }
       ];
 
-      // Règle d'activation de la 2ème sous-couche : froid marqué (ressenti <= 4°C)
-      const needSecondBaseLayer = tempFelt <= 4;
-
       categoriesConfig.forEach(cat => {
-        // Si c'est la 2ème sous-couche et qu'il ne fait pas assez froid, on ne l'affiche pas
-        if (cat.key === 'sous_couche_2' && !needSecondBaseLayer) {
+        // Si c'est la 2ème sous-couche et que la température ressentie dépasse 5°C, on ne l'affiche pas
+        if (cat.key === 'sous_couche_2' && !needSecondLayer) {
           return;
         }
 
-        // Compatibilité avec vos anciens articles encore tagués "buste"
+        // Filtre strict par catégorie (avec rétrocompatibilité sécurisée)
         const candidates = gearList.filter(g => {
           if (g.category === cat.key) return true;
-          // Rétrocompatibilité : si l'article est encore tagué 'buste'
           if (g.category === 'buste') {
-            const isVeste = /veste|jacket|windstopper/i.test(g.name);
+            const name = (g.name || '').toLowerCase();
+            const isVeste = name.includes('mt500') || name.includes('adv') || name.includes('gore') || name.includes('power') || name.includes('veste') || name.includes('jacket') || name.includes('windstopper');
             if (cat.key === 'veste') return isVeste;
-            if (cat.key === 'sous_couche_1') return !isVeste;
+            if (cat.key === 'sous_couche_1') return !isVeste && !name.includes('polaire');
+            if (cat.key === 'sous_couche_2') return name.includes('polaire') || name.includes('intermédiaire');
           }
           return false;
         });
-        
+
         let bestItem = null;
         let bestScore = -999;
 
@@ -809,7 +886,7 @@
           }
         });
 
-        // Si aucun article trouvé pour la 2ème couche optionnelle, on n'affiche pas de carte vide
+        // Si aucun article trouvé pour la 2ème couche optionnelle, ne pas afficher de fiche vide
         if (!bestItem && !cat.required) return;
 
         const fallbackName = `Équipement ${cat.title} adapté`;
@@ -819,9 +896,12 @@
           ? (bestItem.decisionRule || bestItem.specs || 'Recommandé pour ces conditions météo.')
           : 'Aucun vêtement de cette catégorie dans votre inventaire.';
 
-        const tag = isWet 
+        let tag = isWet 
           ? (bestItem?.condition === 'wet' ? 'Étanche / Boue' : 'Recommandé Pluie') 
           : 'Respirant / Sec';
+        if (cat.key === 'veste') tag = isWet ? 'Hardshell Étanche' : 'Windstopper Coupe-vent';
+        if (cat.key === 'sous_couche_1') tag = tempFelt <= 7 ? 'Mérinos 200' : 'Mesh Respirant';
+        if (cat.key === 'sous_couche_2') tag = 'Chaleur Grand Froid';
 
         const card = document.createElement('div');
         card.className = "p-4 rounded-xl bg-gray-900/95 border border-gray-800 flex items-start gap-3.5 shadow-md hover:border-gray-700 transition";
@@ -864,7 +944,7 @@
       applyTacticalRules(t, isWet, 15);
     }
 
-    // Gestion des onglets
+    // Gestion des onglets principaux (Dashboard / Garage)
     function toggleTab(tab) {
       const dash = document.getElementById('view-dashboard');
       const gear = document.getElementById('view-gear');
@@ -886,12 +966,49 @@
       safeLucide();
     }
 
-    // Rendu de l'inventaire matériel avec miniature photo
+    // Filtrage dans le garage
+    function filterGarageCategory(cat) {
+      currentGarageFilter = cat;
+      const buttons = [
+        { id: 'filter-btn-all', key: 'all' },
+        { id: 'filter-btn-veste', key: 'veste' },
+        { id: 'filter-btn-sous_couches', key: 'sous_couches' },
+        { id: 'filter-btn-jambes', key: 'jambes' },
+        { id: 'filter-btn-pieds', key: 'pieds' },
+        { id: 'filter-btn-mains', key: 'mains' },
+        { id: 'filter-btn-cou', key: 'cou' }
+      ];
+
+      buttons.forEach(b => {
+        const el = document.getElementById(b.id);
+        if (!el) return;
+        if (b.key === cat) {
+          el.className = "px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-semibold whitespace-nowrap";
+        } else {
+          el.className = "px-3 py-1.5 rounded-xl bg-gray-800/80 text-gray-300 border border-gray-700 font-medium whitespace-nowrap";
+        }
+      });
+
+      renderGearList();
+    }
+
+    // Rendu de l'inventaire matériel avec miniature photo et libellés clairs
     function renderGearList() {
       const list = document.getElementById('gear-list');
       list.innerHTML = '';
 
-      gearList.forEach(item => {
+      const filteredList = gearList.filter(item => {
+        if (currentGarageFilter === 'all') return true;
+        if (currentGarageFilter === 'sous_couches') return item.category === 'sous_couche_1' || item.category === 'sous_couche_2';
+        return item.category === currentGarageFilter;
+      });
+
+      if (filteredList.length === 0) {
+        list.innerHTML = '<div class="p-6 text-center text-xs text-gray-400 bg-gray-900/60 rounded-xl border border-gray-800">Aucun équipement dans cette catégorie.</div>';
+        return;
+      }
+
+      filteredList.forEach(item => {
         const div = document.createElement('div');
         div.className = 'p-4 rounded-2xl bg-gray-900 border border-gray-800 space-y-3 shadow-md hover:border-gray-700 transition';
         
@@ -901,6 +1018,12 @@
         if (item.condition === 'cold') condBadge = '<span class="text-[10px] px-2 py-0.5 rounded bg-cyan-950/80 text-cyan-300 border border-cyan-700 font-semibold">Grand Froid</span>';
         if (item.condition === 'mild') condBadge = '<span class="text-[10px] px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-300 border border-emerald-700 font-semibold">Mi-Saison</span>';
 
+        let catLabel = item.category.toUpperCase();
+        let catColor = 'bg-gray-800 text-gray-300';
+        if (item.category === 'veste') { catLabel = 'VESTE (COUCHE 3)'; catColor = 'bg-blue-500/20 text-blue-300 border-blue-500/30'; }
+        if (item.category === 'sous_couche_1') { catLabel = 'SOUS-COUCHE 1 (PEAU)'; catColor = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'; }
+        if (item.category === 'sous_couche_2') { catLabel = 'SOUS-COUCHE 2 (INTERMÉDIAIRE)'; catColor = 'bg-amber-500/20 text-amber-300 border-amber-500/30'; }
+
         div.innerHTML = `
           <div class="flex items-start justify-between gap-3">
             <div class="flex items-start gap-3">
@@ -908,7 +1031,7 @@
               <div>
                 <div class="flex flex-wrap items-center gap-2">
                   <span class="text-sm font-bold text-white">${item.name}</span>
-                  <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-gray-800 text-gray-400 border border-gray-700">${item.category}</span>
+                  <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded border ${catColor}">${catLabel}</span>
                   ${condBadge}
                 </div>
                 <div class="text-xs text-gray-300 mt-1 font-medium">${item.specs || 'Aucune spécification'}</div>
@@ -955,7 +1078,7 @@
       document.getElementById('modal-title').innerHTML = '<i data-lucide="plus-circle" class="w-4 h-4 text-emerald-400"></i> Ajouter un équipement';
       document.getElementById('modal-edit-id').value = '';
       document.getElementById('modal-name').value = '';
-      document.getElementById('modal-category').value = 'buste';
+      document.getElementById('modal-category').value = 'veste';
       document.getElementById('modal-condition').value = 'wet';
       document.getElementById('modal-specs').value = '';
       document.getElementById('modal-temp-min').value = '0';
@@ -977,7 +1100,7 @@
       document.getElementById('modal-title').innerHTML = '<i data-lucide="edit-3" class="w-4 h-4 text-emerald-400"></i> Modifier la fiche équipement';
       document.getElementById('modal-edit-id').value = item.id;
       document.getElementById('modal-name').value = item.name || '';
-      document.getElementById('modal-category').value = item.category || 'buste';
+      document.getElementById('modal-category').value = item.category || 'veste';
       document.getElementById('modal-condition').value = item.condition || 'all';
       document.getElementById('modal-specs').value = item.specs || '';
       document.getElementById('modal-temp-min').value = item.tempMin !== undefined ? item.tempMin : -5;
@@ -1131,13 +1254,13 @@
           };
         } else if (query.includes('mt500') && (query.includes('adv') || query.includes('veste') || query.includes('jacket'))) {
           detected = {
-            category: 'buste',
+            category: 'veste',
             condition: 'wet',
             name: extractedTitle ? extractedTitle.split('|')[0].trim() : 'Veste Endura MT500 ADV',
             specs: 'Membrane Pertex Shield 3L, 20 000 mm imperméable, zips d aération',
             tempMin: -5,
             tempMax: 12,
-            decisionRule: 'Activer impérativement dès pluie ou sol trempé. Si T° > 8°C, bannir le mérinos en dessous.',
+            decisionRule: 'Activer impérativement dès pluie ou sol trempé.',
             link: input.startsWith('http') ? input : 'https://www.endurasport.com/',
             image: extractedImage || 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=300&auto=format&fit=crop&q=60'
           };
@@ -1167,13 +1290,13 @@
           };
         } else if (query.includes('merinos') || query.includes('icebreaker') || query.includes('oasis')) {
           detected = {
-            category: 'buste',
+            category: 'sous_couche_1',
             condition: 'cold',
             name: 'Sous-couche Laine Mérinos 200 g/m²',
             specs: '100% Laine Mérinos naturelle 200g, neutralisation thermique et bactérienne',
             tempMin: -5,
             tempMax: 7,
-            decisionRule: 'Première couche parfaite de -5°C à 7°C. À éviter au-dessus de 8°C avec une hardshell.',
+            decisionRule: 'Première couche peau idéale de -5°C à 7°C.',
             link: input.startsWith('http') ? input : '',
             image: extractedImage || ''
           };
@@ -1191,7 +1314,7 @@
           };
         } else if (query.includes('gore') && (query.includes('active') || query.includes('windstopper') || query.includes('bleue'))) {
           detected = {
-            category: 'buste',
+            category: 'veste',
             condition: 'dry',
             name: 'Veste Gore Windstopper Active',
             specs: 'Gore Windstopper coupe-vent total, ultra-respirant, déperlant',
@@ -1202,7 +1325,9 @@
             image: extractedImage || ''
           };
         } else {
-          let cat = 'buste';
+          let cat = 'veste';
+          if (query.includes('sous-couche') || query.includes('premiere couche') || query.includes('baselayer')) cat = 'sous_couche_1';
+          if (query.includes('polaire') || query.includes('thermique') || query.includes('intermediaire')) cat = 'sous_couche_2';
           if (query.includes('pantalon') || query.includes('short') || query.includes('cuissard') || query.includes('salopette')) cat = 'jambes';
           if (query.includes('chaussure') || query.includes('chaussette') || query.includes('gtx')) cat = 'pieds';
           if (query.includes('gant')) cat = 'mains';
@@ -1375,7 +1500,7 @@
 
           const { data: cloudGear } = await supabaseClient.from('gear_items').select('*').eq('user_id', currentUser.id);
           if (cloudGear && cloudGear.length > 0) {
-            gearList = cloudGear.map(d => ({
+            const mapped = cloudGear.map(d => ({
               id: d.id,
               category: d.category,
               condition: d.condition,
@@ -1387,6 +1512,7 @@
               link: d.link,
               image: d.image_url || ''
             }));
+            gearList = sanitizeAndMigrateGear(mapped);
             localStorage.setItem('vtt_gear_list', JSON.stringify(gearList));
             renderGearList();
             runSimulation();
