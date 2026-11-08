@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vtt-gear-v8';
+const CACHE_NAME = 'vtt-gear-v10';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
